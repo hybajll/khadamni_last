@@ -143,28 +143,38 @@
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="{% if app.user and app.user.type == 'admin' %}{{ path('app_admin_dashboard') }}{% elseif app.user %}{{ path('app_user_home') }}{% else %}{{ path('app_login') }}{% endif %}">
+                {# Lien Logo Dynamique #}
+                <a class="navbar-brand" href="{% if app.user %}{% if 'ROLE_SOCIETY' in app.user.roles %}{{ path('society_home') }}{% elseif app.user.type == 'admin' %}{{ path('app_admin_dashboard') }}{% else %}{{ path('app_user_home') }}{% endif %}{% else %}{{ path('app_login') }}{% endif %}">
                     <div class="logo-khadamni">
                         <span class="logo-text">خدمني</span>
                         <small>خدمتك معانا مضمونة</small>
                     </div>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarMain">
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         {% if app.user %}
-                            {% if app.user.type == 'admin' %}
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_dashboard') }}">Admin</a></li>
+                            {# MENU ENTREPRISE #}
+                            {% if 'ROLE_SOCIETY' in app.user.roles %}
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_home') }}">Accueil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_dashboard') }}">Offres</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_offer_new') }}">Publier</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_profile') }}">Profil</a></li>
+                            
+                            {# MENU ADMIN #}
+                            {% elseif app.user.type == 'admin' %}
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_dashboard') }}">Admin Dashboard</a></li>
+                            
+                            {# MENU CANDIDAT #}
                             {% else %}
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_user_home') }}">Accueil</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_profile') }}">Profil</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_cv_manage') }}">CV</a></li>
-                                <li class="nav-item"><a class="nav-link" href="#" onclick="return false;">Offres</a></li>
-                                <li class="nav-item"><a class="nav-link" href="#" onclick="return false;">Réclamations</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_reclamation_index') }}">Réclamations</a></li>
                             {% endif %}
                             <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a></li>
                             <li class="nav-item ms-lg-2 d-flex align-items-center">
@@ -177,8 +187,21 @@
                                 </a>
                             </li>
                         {% else %}
-                            <li class="nav-item"><a class="nav-link" href="{{ path('app_login') }}">Connexion</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ path('app_register') }}">Inscription</a></li>
+                            {# MENU NON CONNECTÉ #}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="loginDrop" data-bs-toggle="dropdown">Connexion</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ path('app_login') }}">Candidat</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('society_login') }}">Entreprise</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="regDrop" data-bs-toggle="dropdown">Inscription</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ path('app_register') }}">Candidat</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('society_register') }}">Entreprise</a></li>
+                                </ul>
+                            </li>
                         {% endif %}
                     </ul>
                 </div>
@@ -188,9 +211,9 @@
         <main class="py-5">
             <div class="container">
                 {% for label, messages in app.flashes %}
-                    <div class="alert alert-{{ label == 'success' ? 'success' : label == 'error' ? 'danger' : 'info' }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
                         {{ messages|first }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
 
@@ -198,13 +221,11 @@
             </div>
         </main>
 
-        <footer class="bg-white border-top py-3">
-            <div class="container text-center text-muted">© {{ "now"|date('Y') }} Khadamni</div>
+        <footer class="bg-white border-top py-3 text-center text-muted">
+            <div class="container">© {{ "now"|date('Y') }} Khadamni</div>
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
+        {% block javascripts %}{% endblock %}
     </body>
 </html>

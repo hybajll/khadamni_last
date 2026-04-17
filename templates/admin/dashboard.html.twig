@@ -1,43 +1,114 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - Khadamni{% endblock %}
 
 {% block body %}
+<style>
+    .bg-cream { background-color: #fdfbf7; }
+    .text-darken { color: #2d3748; }
+    .card { transition: transform 0.2s, box-shadow 0.2s; border-radius: 15px; border: none; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+    .icon-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 1.5rem; }
+</style>
+
 <div class="container py-4">
-    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
-        <h1 class="h4 mb-1 text-darken">Admin Dashboard</h1>
-        <p class="text-muted mb-0">Gestion des utilisateurs, CV et administrateurs.</p>
+    {# Header du Dashboard #}
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4 border">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h4 mb-1 text-darken fw-bold">Tableau de Bord Administrateur</h1>
+                <p class="text-muted mb-0">Bienvenue, {{ app.user.prenom }}. Voici l'état actuel de la plateforme Khadamni.</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-primary rounded-pill px-3 py-2">Mode Admin</span>
+            </div>
+        </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="fw-semibold mb-2">Manage Users</div>
-                    <div class="text-muted mb-3">Activer / désactiver, supprimer.</div>
-                    <a href="{{ path('app_admin_users') }}" class="btn btn-primary w-100">Ouvrir</a>
+    {# Grille des fonctionnalités #}
+    <div class="row g-4">
+        
+        {# Gestion des Utilisateurs #}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="icon-box bg-primary bg-opacity-10 mx-auto">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold">Utilisateurs</h5>
+                    <p class="text-muted small">Activer, désactiver ou supprimer des comptes étudiants et diplômés.</p>
+                    <a href="{{ path('app_admin_users') }}" class="btn btn-primary w-100 rounded-pill">Gérer</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="fw-semibold mb-2">Manage CVs</div>
-                    <div class="text-muted mb-3">Voir versions originale et améliorée.</div>
-                    <a href="{{ path('app_admin_cvs') }}" class="btn btn-primary w-100">Ouvrir</a>
+
+        {# Gestion des CVs #}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="icon-box bg-success bg-opacity-10 mx-auto">
+                        <i class="fas fa-file-pdf fa-2x text-success"></i>
+                    </div>
+                    <h5 class="fw-bold">Gestion CV</h5>
+                    <p class="text-muted small">Consulter et valider les versions originales et améliorées des CV.</p>
+                    <a href="{{ path('app_admin_cvs') }}" class="btn btn-success w-100 rounded-pill">Ouvrir</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body p-4">
-                    <div class="fw-semibold mb-2">Manage Admins</div>
-                    <div class="text-muted mb-3">Liste + ajout manuel.</div>
-                    <a href="{{ path('app_admin_admins') }}" class="btn btn-primary w-100">Ouvrir</a>
+
+        {# Support & Réclamations #}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm position-relative">
+                <div class="card-body p-4 text-center">
+                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="z-index: 5;">
+                        0
+                    </span>
+                    <div class="icon-box bg-warning bg-opacity-10 mx-auto">
+                        <i class="fas fa-headset fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="fw-bold">Support Client</h5>
+                    <p class="text-muted small">Répondre aux réclamations et assister les utilisateurs en ligne.</p>
+                    <a href="{{ path('app_admin_reclamations_index') }}" class="btn btn-warning w-100 text-white rounded-pill fw-bold">Répondre</a>
                 </div>
             </div>
         </div>
+
+        {# Gestion des Administrateurs #}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="icon-box bg-dark bg-opacity-10 mx-auto">
+                        <i class="fas fa-user-shield fa-2x text-dark"></i>
+                    </div>
+                    <h5 class="fw-bold">Staff Admin</h5>
+                    <p class="text-muted small">Liste des administrateurs et création de nouveaux accès staff.</p>
+                    <a href="{{ path('app_admin_admins') }}" class="btn btn-dark w-100 rounded-pill">Paramètres</a>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-{% endblock %}
 
+<script>
+    function fetchNewMessages() {
+        fetch("{{ path('app_admin_check_messages') }}")
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notif-badge');
+                if (data.newMessagesCount > 0) {
+                    badge.innerText = data.newMessagesCount;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+            })
+            .catch(error => console.error('Erreur notifications:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchNewMessages();
+        setInterval(fetchNewMessages, 20000);
+    });
+</script>
+{% endblock %}

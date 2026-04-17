@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -15,11 +17,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\InheritanceType('SINGLE_TABLE')]
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
 #[ORM\DiscriminatorMap([
-    // New values (requested)
     'etudiant' => Etudiant::class,
     'diplome' => Diplome::class,
     'admin' => Admin::class,
-    // Legacy values (keep to avoid breaking existing rows)
     'ETUDIANT' => Etudiant::class,
     'DIPLOME' => Diplome::class,
     'ADMIN' => Admin::class,
@@ -91,7 +91,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNom(string $nom): self
     {
         $this->nom = $nom;
-
         return $this;
     }
 
@@ -103,7 +102,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPrenom(string $prenom): self
     {
         $this->prenom = $prenom;
-
         return $this;
     }
 
@@ -115,7 +113,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -127,7 +124,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
-
         return $this;
     }
 
@@ -139,11 +135,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
-
         return $this;
     }
 
-    // Backward-compatible methods (legacy naming in existing code/templates)
+    // --- Legacy Compatibility Methods ---
+
     public function isActif(): bool
     {
         return $this->isActive();
@@ -162,7 +158,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLocalDateTime(?\DateTimeInterface $localDateTime): self
     {
         $this->localDateTime = $localDateTime;
-
         return $this;
     }
 
@@ -174,11 +169,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAdminRole(?string $adminRole): self
     {
         $this->adminRole = $adminRole;
-
         return $this;
     }
 
-    // Backward-compatible methods (legacy naming in existing code/templates)
     public function getRole(): ?string
     {
         return $this->getAdminRole();
@@ -206,11 +199,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this instanceof Admin) {
             return self::TYPE_ADMIN;
         }
-
         if ($this instanceof Diplome) {
             return self::TYPE_DIPLOME;
         }
-
         return self::TYPE_ETUDIANT;
     }
 
@@ -221,7 +212,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->email;
+        return (string) $this->email;
     }
 
     public function getRoles(): array
@@ -238,14 +229,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 'super_admin' => 'ROLE_SUPER_ADMIN',
                 'gestionnaire' => 'ROLE_GESTIONNAIRE',
                 'moderateur' => 'ROLE_MODERATEUR',
-                default => $adminRole, // fallback for legacy/custom values
+                default => $adminRole,
             };
         }
-        return $roles;
+        return array_unique($roles);
+    }
+
+    /**
+     * @return Collection<int, Reclamation>
+     */
+    public function getReclamations(): Collection
+    {
+        return $this->reclamations;
+    }
+
+    public function addReclamation(Reclamation $reclamation): self
+    {
+        if (!$this->reclamations->contains($reclamation)) {
+            $this->reclamations->add($reclamation);
+            $reclamation->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeReclamation(Reclamation $reclamation): self
+    {
+        if ($this->reclamations->removeElement($reclamation)) {
+            if ($reclamation->getUser() === $this) {
+                $reclamation->setUser(null);
+            }
+        }
+        return $this;
     }
 
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
+        // Nettoyage des données sensibles temporaires si nécessaire
     }
 }
