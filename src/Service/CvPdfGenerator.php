@@ -13,18 +13,24 @@ final class CvPdfGenerator
     public function __construct(
         private readonly Environment $twig,
         private readonly CvStructuredParser $structuredParser,
+        private readonly CvLayoutBuilder $layoutBuilder,
     ) {
     }
 
     public function downloadResponse(Cv $cv, bool $useImproved = true): Response
     {
-        $content = $useImproved ? (string) $cv->getContenuAmeliore() : (string) $cv->getContenuOriginal();
+        // If we don't have a separate improved version, fall back to the latest saved version (contenuOriginal).
+        $content = $useImproved
+            ? (string) ($cv->getContenuAmeliore() ?: $cv->getContenuOriginal())
+            : (string) $cv->getContenuOriginal();
         $sections = $this->structuredParser->parse($content);
+        $layout = $this->layoutBuilder->build($sections);
 
         $html = $this->twig->render('cv/pdf.html.twig', [
             'cv' => $cv,
             'user' => $cv->getUser(),
             'sections' => $sections,
+            'layout' => $layout,
             'generated_at' => new \DateTimeImmutable(),
         ]);
 
@@ -57,4 +63,3 @@ final class CvPdfGenerator
         );
     }
 }
-

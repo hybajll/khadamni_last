@@ -45,6 +45,7 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\NotBlank(message: 'Le numero de telephone est obligatoire.')]
     #[Assert\Regex(
         pattern: '/^[\d\s\-\+\(\)]+$/',
         message: 'Le numero de telephone n\'est pas valide.'
@@ -52,12 +53,15 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: 'L\'adresse est obligatoire.')]
     private ?string $address = null;
 
     #[ORM\Column(length: 150, nullable: true)]
+    #[Assert\NotBlank(message: 'Le domaine d\'activite est obligatoire.')]
     private ?string $domain = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
     #[Assert\Length(
         max: 5000,
         maxMessage: 'La description ne doit pas depasser {{ limit }} caracteres.'
@@ -65,6 +69,7 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: 'Le site web est obligatoire.')]
     #[Assert\Url(message: 'Le site web n\'est pas une URL valide.')]
     private ?string $website = null;
 
@@ -73,6 +78,13 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
+
+    // Subscription + free usage for publishing offers (2 free publications)
+    #[ORM\Column(name: 'freeUsageCount', type: 'integer')]
+    private int $freeUsageCount = 0;
+
+    #[ORM\Column(name: 'subscriptionEndDate', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $subscriptionEndDate = null;
 
     /**
      * @var Collection<int, Offer>
@@ -198,6 +210,40 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function getFreeUsageCount(): int
+    {
+        return $this->freeUsageCount;
+    }
+
+    public function setFreeUsageCount(int $freeUsageCount): self
+    {
+        $this->freeUsageCount = max(0, $freeUsageCount);
+        return $this;
+    }
+
+    public function incrementFreeUsageCount(): self
+    {
+        $this->freeUsageCount++;
+        return $this;
+    }
+
+    public function getSubscriptionEndDate(): ?\DateTimeImmutable
+    {
+        return $this->subscriptionEndDate;
+    }
+
+    public function setSubscriptionEndDate(?\DateTimeImmutable $subscriptionEndDate): self
+    {
+        $this->subscriptionEndDate = $subscriptionEndDate;
+        return $this;
+    }
+
+    public function isSubscriptionActive(?\DateTimeImmutable $now = null): bool
+    {
+        $now = $now ?? new \DateTimeImmutable();
+        return $this->subscriptionEndDate instanceof \DateTimeImmutable && $this->subscriptionEndDate > $now;
     }
 
     /**

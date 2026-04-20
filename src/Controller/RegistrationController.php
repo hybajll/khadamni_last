@@ -26,6 +26,11 @@ class RegistrationController extends AbstractController
         SluggerInterface $slugger,
     ): Response
     {
+        if ($this->getUser()) {
+            $this->addFlash('info', 'Vous êtes déjà connecté. Déconnectez-vous pour créer un nouveau compte.');
+            return $this->redirectToRoute('app_user_home');
+        }
+
         $user = new User();
         $form = $this->createForm(RegistrationType::class, $user);
         $form->handleRequest($request);

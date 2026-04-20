@@ -31,7 +31,7 @@ final class CreateAdminCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'Admin email')
             ->addArgument('password', InputArgument::REQUIRED, 'Admin password')
-            ->addArgument('role', InputArgument::OPTIONAL, 'Business role: super_admin|gestionnaire|moderateur', Admin::BUSINESS_ROLE_SUPER_ADMIN);
+            ->addArgument('role', InputArgument::OPTIONAL, 'Business role: SUPERADMIN|MODERATOR|MANAGER', Admin::BUSINESS_ROLE_SUPERADMIN);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,19 +45,19 @@ final class CreateAdminCommand extends Command
             return Command::FAILURE;
         }
 
-        if (!in_array($role, [
-            Admin::BUSINESS_ROLE_SUPER_ADMIN,
-            Admin::BUSINESS_ROLE_GESTIONNAIRE,
-            Admin::BUSINESS_ROLE_MODERATEUR,
+        if (!in_array(strtoupper($role), [
+            Admin::BUSINESS_ROLE_SUPERADMIN,
+            Admin::BUSINESS_ROLE_MODERATOR,
+            Admin::BUSINESS_ROLE_MANAGER,
         ], true)) {
-            $output->writeln('Invalid role. Use: super_admin | gestionnaire | moderateur');
+            $output->writeln('Invalid role. Use: SUPERADMIN | MODERATOR | MANAGER');
             return Command::FAILURE;
         }
 
         $admin = new Admin();
         $admin
             ->setEmail($email)
-            ->setAdminRole($role)
+            ->setAdminRole(strtoupper($role))
             ->setIsActive(true)
             ->setLocalDateTime(new \DateTimeImmutable())
             ->setPassword($this->passwordHasher->hashPassword($admin, $password));
@@ -70,4 +70,3 @@ final class CreateAdminCommand extends Command
         return Command::SUCCESS;
     }
 }
-

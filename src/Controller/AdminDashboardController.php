@@ -28,6 +28,7 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/users', name: 'app_admin_users', methods: ['GET'])]
+    #[IsGranted('ROLE_SUPERADMIN')]
     public function users(Request $request, UserRepository $userRepository): Response
     {
         $query = (string) $request->query->get('q', '');
@@ -39,8 +40,15 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/users/{id}/toggle-active', name: 'app_admin_user_toggle_active', methods: ['POST'])]
-    public function toggleUserActive(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    #[IsGranted('ROLE_SUPERADMIN')]
+    public function toggleUserActive(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager): Response
     {
+        $user = $userRepository->find($id);
+        if (!$user instanceof User) {
+            $this->addFlash('error', 'Utilisateur introuvable.');
+            return $this->redirectToRoute('app_admin_users');
+        }
+
         if (!$this->isCsrfTokenValid('toggle_active_'.$user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_admin_users');
@@ -54,8 +62,15 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/users/{id}/delete', name: 'app_admin_user_delete', methods: ['POST'])]
-    public function deleteUser(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    #[IsGranted('ROLE_SUPERADMIN')]
+    public function deleteUser(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager): Response
     {
+        $user = $userRepository->find($id);
+        if (!$user instanceof User) {
+            $this->addFlash('error', 'Utilisateur introuvable.');
+            return $this->redirectToRoute('app_admin_users');
+        }
+
         if (!$this->isCsrfTokenValid('delete_user_'.$user->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_admin_users');
@@ -74,6 +89,7 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/cvs', name: 'app_admin_cvs', methods: ['GET'])]
+    #[IsGranted('ROLE_MODERATOR')]
     public function cvs(Request $request, CvRepository $cvRepository): Response
     {
         $query = (string) $request->query->get('q', '');
@@ -85,6 +101,7 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/admins', name: 'app_admin_admins', methods: ['GET'])]
+    #[IsGranted('ROLE_SUPERADMIN')]
     public function admins(Request $request, AdminRepository $adminRepository): Response
     {
         $query = (string) $request->query->get('q', '');
@@ -96,6 +113,7 @@ final class AdminDashboardController extends AbstractController
     }
 
     #[Route('/admins/new', name: 'app_admin_admins_new', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_SUPERADMIN')]
     public function newAdmin(
         Request $request,
         EntityManagerInterface $entityManager,

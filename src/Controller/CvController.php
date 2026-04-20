@@ -5,9 +5,12 @@ namespace App\Controller;
 use App\Entity\Cv;
 use App\Form\CvUserType;
 use App\Repository\CvRepository;
-use App\Service\CvAiAssistant;
+use App\Service\CvAiApiAssistant;
+use App\Service\CvLayoutBuilder;
 use App\Service\CvPdfGenerator;
+use App\Service\CvStructuredParser;
 use App\Service\PdfTextExtractor;
+use App\Service\SubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -178,7 +181,8 @@ final class CvController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         CvRepository $cvRepository,
-        CvAiAssistant $cvAiAssistant,
+        CvAiApiAssistant $cvAiAssistant,
+        SubscriptionService $subscriptionService,
     ): Response {
         if (!$this->isCsrfTokenValid('improve_cv', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token CSRF invalide.');
@@ -186,6 +190,15 @@ final class CvController extends AbstractController
         }
 
         $user = $this->getUser();
+        if ($user instanceof \App\Entity\User) {
+            $block = $subscriptionService->blockMessageIfNotAllowed($user);
+            if ($block) {
+                $this->addFlash('error', $block);
+                $this->addFlash('info', 'Actions gratuites restantes : '.$subscriptionService->remainingFreeActions($user));
+                return $this->redirectToRoute('app_subscription');
+            }
+        }
+
         $cv = $cvRepository->findOneBy(['user' => $user]);
 
         if (!$cv) {
@@ -199,29 +212,52 @@ final class CvController extends AbstractController
             return $this->redirectToRoute('app_cv_edit');
         }
 
-        $cv->setContenuAmeliore($result->improvedText);
+        // New behavior: the improved CV becomes the latest saved version.
+        // We overwrite contenuOriginal and clear contenuAmeliore so the previous version is not kept.
+        $cv->setContenuOriginal($result->improvedText);
+        $cv->setContenuAmeliore(null);
         $cv->setConseilsAi($result->adviceText);
         $cv->setNombreAmeliorations(($cv->getNombreAmeliorations() ?? 0) + 1);
+        $cv->setDateUpload(new \DateTime());
 
         $entityManager->flush();
-        $this->addFlash('success', 'Votre CV a été amélioré (simulation IA).');
+        if ($user instanceof \App\Entity\User) {
+            $subscriptionService->recordAction($user);
+        }
+        $this->addFlash('success', 'Votre CV a été amélioré. La dernière version a été enregistrée.');
 
-        return $this->redirectToRoute('app_cv_view_improved');
+        return $this->redirectToRoute('app_cv_manage');
     }
 
     #[Route('/view-improved', name: 'app_cv_view_improved', methods: ['GET'])]
-    public function viewImproved(CvRepository $cvRepository): Response
+    public function viewImproved(
+        CvRepository $cvRepository,
+        CvStructuredParser $structuredParser,
+        CvLayoutBuilder $layoutBuilder,
+    ): Response
     {
         $user = $this->getUser();
         $cv = $cvRepository->findOneBy(['user' => $user]);
 
-        if (!$cv || !$cv->getContenuAmeliore()) {
-            $this->addFlash('error', 'Améliorez votre CV d\'abord.');
+        // We no longer keep a separate improved version.
+        if (!$cv || !$cv->getContenuOriginal()) {
+            $this->addFlash('error', 'Ajoutez votre CV d\'abord.');
             return $this->redirectToRoute('app_cv_manage');
         }
 
+        if (!$cv->getContenuAmeliore()) {
+            return $this->redirectToRoute('app_cv_manage');
+        }
+
+        $originalSections = $structuredParser->parse((string) $cv->getContenuOriginal());
+        $improvedSections = $structuredParser->parse((string) $cv->getContenuAmeliore());
+
         return $this->render('cv/view_improved.html.twig', [
             'cv' => $cv,
+            'original_sections' => $originalSections,
+            'improved_sections' => $improvedSections,
+            'original_layout' => $layoutBuilder->build($originalSections),
+            'improved_layout' => $layoutBuilder->build($improvedSections),
         ]);
     }
 
@@ -231,8 +267,9 @@ final class CvController extends AbstractController
         $user = $this->getUser();
         $cv = $cvRepository->findOneBy(['user' => $user]);
 
-        if (!$cv || !$cv->getContenuAmeliore()) {
-            $this->addFlash('error', 'Améliorez votre CV d\'abord.');
+        // Use the latest saved version (contenuOriginal). If contenuAmeliore exists, it will be used by the generator.
+        if (!$cv || !trim((string) $cv->getContenuOriginal())) {
+            $this->addFlash('error', "Ajoutez votre CV d'abord.");
             return $this->redirectToRoute('app_cv_manage');
         }
 

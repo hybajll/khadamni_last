@@ -5,11 +5,15 @@ namespace App\Controller;
 use App\Entity\Offer;
 use App\Entity\Society;
 use App\Form\OfferType;
+use App\Form\SocietyPasswordChangeType;
 use App\Repository\OfferRepository;
+use App\Service\SocietySubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -17,6 +21,31 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_SOCIETY')]
 class SocietyDashboardController extends AbstractController
 {
+    #[Route('/offers', name: 'society_offers_feed', methods: ['GET'])]
+    public function offersFeed(Request $request, OfferRepository $offerRepository): Response
+    {
+        /** @var Society $society */
+        $society = $this->getUser();
+
+        $scope = (string) $request->query->get('scope', 'mine'); // mine|all
+        $keyword = trim((string) $request->query->get('q', ''));
+        $keyword = $keyword !== '' ? $keyword : null;
+
+        if ($scope === 'all') {
+            $offers = $offerRepository->searchOffers($keyword);
+        } else {
+            $scope = 'mine';
+            $offers = $offerRepository->searchOffersForSociety($society, $keyword);
+        }
+
+        return $this->render('society/offer/feed.html.twig', [
+            'society' => $society,
+            'offers' => $offers,
+            'scope' => $scope,
+            'q' => $keyword ?? '',
+        ]);
+    }
+
     #[Route('/dashboard', name: 'society_dashboard')]
     public function dashboard(OfferRepository $offerRepository): Response
     {
@@ -61,28 +90,33 @@ class SocietyDashboardController extends AbstractController
     }
 
     #[Route('/profile/edit', name: 'society_profile_edit', methods: ['GET', 'POST'])]
-    public function editProfile(Request $request, EntityManagerInterface $entityManager): Response
+    public function editProfile(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
         /** @var Society $society */
         $society = $this->getUser();
         
-        $form = $this->createFormBuilder($society)
-            ->add('name')
-            ->add('email')
-            ->add('phone')
-            ->add('address')
-            ->add('domain')
-            ->add('description')
-            ->add('website')
-            ->getForm();
+        // Only allow password change for society profile (no email/name edits).
+        $form = $this->createForm(SocietyPasswordChangeType::class);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-            $this->addFlash('success', 'Profil mis a jour avec succes.');
+            $currentPassword = (string) $form->get('currentPassword')->getData();
+            if (!$passwordHasher->isPasswordValid($society, $currentPassword)) {
+                $form->addError(new FormError('Mot de passe actuel incorrect.'));
+            } else {
+                $newPassword = (string) $form->get('newPassword')->getData();
+                $society->setPassword($passwordHasher->hashPassword($society, $newPassword));
 
-            return $this->redirectToRoute('society_profile');
+                $entityManager->flush();
+                $this->addFlash('success', 'Mot de passe mis à jour avec succès.');
+
+                return $this->redirectToRoute('society_profile');
+            }
+        }
+
+        if ($form->isSubmitted() && !$form->isValid()) {
+            $this->addFlash('error', 'Veuillez corriger les erreurs du formulaire.');
         }
 
         return $this->render('society/profile/edit.html.twig', [
@@ -92,10 +126,17 @@ class SocietyDashboardController extends AbstractController
     }
 
     #[Route('/offers/new', name: 'society_offer_new', methods: ['GET', 'POST'])]
-    public function newOffer(Request $request, EntityManagerInterface $entityManager): Response
+    public function newOffer(Request $request, EntityManagerInterface $entityManager, SocietySubscriptionService $subscriptionService): Response
     {
         /** @var Society $society */
         $society = $this->getUser();
+
+        // Block publication if free limit reached and not subscribed.
+        $blockMessage = $subscriptionService->blockMessageIfNotAllowed($society);
+        if ($blockMessage) {
+            $this->addFlash('error', $blockMessage);
+            return $this->redirectToRoute('society_subscription');
+        }
         
         $offer = new Offer();
         $form = $this->createForm(OfferType::class, $offer);
@@ -109,6 +150,9 @@ class SocietyDashboardController extends AbstractController
 
             $entityManager->persist($offer);
             $entityManager->flush();
+
+            // Count this publication as a free action when not subscribed.
+            $subscriptionService->recordPublication($society);
 
             $this->addFlash('success', 'Offre d\'emploi creee avec succes.');
 

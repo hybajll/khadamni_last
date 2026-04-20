@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Analyse CV - Khadamni{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
+        <h1 class="h4 mb-1 text-darken">Analyse CV (IA)</h1>
+        <p class="text-muted mb-0">Compétences, forces, faiblesses et mots-clés (basé uniquement sur votre CV).</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ path('app_user_offers') }}" class="btn btn-secondary">Retour</a>
+        <a href="{{ path('app_cv_manage') }}" class="btn btn-light border">Mon CV</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Compétences</h2>
+                    {% if analysis.skills is empty %}
+                        <div class="text-muted">-</div>
+                    {% else %}
+                        <ul class="mb-0 ps-3">
+                            {% for item in analysis.skills %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Mots-clés</h2>
+                    {% if analysis.keywords is empty %}
+                        <div class="text-muted">-</div>
+                    {% else %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for item in analysis.keywords|slice(0, 24) %}
+                                <span class="badge text-bg-light border">{{ item }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Points forts</h2>
+                    {% if analysis.strengths is empty %}
+                        <div class="text-muted">-</div>
+                    {% else %}
+                        <ul class="mb-0 ps-3">
+                            {% for item in analysis.strengths %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Points faibles</h2>
+                    {% if analysis.weaknesses is empty %}
+                        <div class="text-muted">-</div>
+                    {% else %}
+                        <ul class="mb-0 ps-3">
+                            {% for item in analysis.weaknesses %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

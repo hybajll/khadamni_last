@@ -70,13 +70,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'LocalDateTime', type: 'datetime_immutable', nullable: true)]
     protected ?\DateTimeInterface $localDateTime = null;
 
-    // Business role for admins only: super_admin | gestionnaire | moderateur
+    // Business role for admins only (RBAC): SUPERADMIN | MODERATOR | MANAGER
     #[ORM\Column(name: 'role', length: 255, nullable: true)]
     protected ?string $adminRole = null;
 
     // Keep DB column name in camelCase to match existing database column created on XAMPP.
     #[ORM\Column(name: 'avatarPath', length: 255, nullable: true)]
     protected ?string $avatarPath = null;
+
+    // Subscription and free usage (2 free actions: apply or CV improvement)
+    #[ORM\Column(name: 'freeUsageCount', type: 'integer')]
+    protected int $freeUsageCount = 0;
+
+    #[ORM\Column(name: 'subscriptionEndDate', type: 'datetime_immutable', nullable: true)]
+    protected ?\DateTimeImmutable $subscriptionEndDate = null;
 
     public function getId(): ?int
     {
@@ -194,6 +201,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getFreeUsageCount(): int
+    {
+        return $this->freeUsageCount;
+    }
+
+    public function setFreeUsageCount(int $freeUsageCount): self
+    {
+        $this->freeUsageCount = max(0, $freeUsageCount);
+        return $this;
+    }
+
+    public function incrementFreeUsageCount(): self
+    {
+        $this->freeUsageCount++;
+        return $this;
+    }
+
+    public function getSubscriptionEndDate(): ?\DateTimeImmutable
+    {
+        return $this->subscriptionEndDate;
+    }
+
+    public function setSubscriptionEndDate(?\DateTimeImmutable $subscriptionEndDate): self
+    {
+        $this->subscriptionEndDate = $subscriptionEndDate;
+        return $this;
+    }
+
+    public function isSubscriptionActive(?\DateTimeImmutable $now = null): bool
+    {
+        $now = $now ?? new \DateTimeImmutable();
+        return $this->subscriptionEndDate instanceof \DateTimeImmutable && $this->subscriptionEndDate > $now;
+    }
+
     public function getType(): string
     {
         if ($this instanceof Admin) {
@@ -225,11 +266,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         $adminRole = $this->getAdminRole();
         if ($adminRole) {
-            $roles[] = match ($adminRole) {
-                'super_admin' => 'ROLE_SUPER_ADMIN',
-                'gestionnaire' => 'ROLE_GESTIONNAIRE',
-                'moderateur' => 'ROLE_MODERATEUR',
-                default => $adminRole,
+            // Backward compatible mapping (old values) + new RBAC roles
+            $normalized = strtoupper(trim($adminRole));
+            $roles[] = match ($normalized) {
+                // New values
+                'SUPERADMIN' => 'ROLE_SUPERADMIN',
+                'MODERATOR' => 'ROLE_MODERATOR',
+                'MANAGER' => 'ROLE_MANAGER',
+
+                // Old values (legacy)
+                'SUPER_ADMIN', 'SUPER-ADMIN', 'SUPER ADMIN', 'SUPER_ADMINISTRATEUR', 'SUPERADMINISTRATEUR', 'SUPER_ADMIN' => 'ROLE_SUPERADMIN',
+                'GESTIONNAIRE' => 'ROLE_MANAGER',
+                'MODERATEUR' => 'ROLE_MODERATOR',
+
+                default => $normalized,
             };
         }
         return array_unique($roles);

@@ -2,7 +2,9 @@
 
 namespace App\Command;
 
+use App\Entity\Society;
 use App\Entity\User;
+use App\Repository\SocietyRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -19,6 +21,7 @@ final class CheckUserPasswordCommand extends Command
 {
     public function __construct(
         private readonly UserRepository $userRepository,
+        private readonly SocietyRepository $societyRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
         parent::__construct();
@@ -37,15 +40,23 @@ final class CheckUserPasswordCommand extends Command
         $plainPassword = (string) $input->getArgument('password');
 
         $user = $this->userRepository->findOneBy(['email' => $email]);
-        if (!$user instanceof User) {
-            $output->writeln('<error>User not found.</error>');
-            return Command::FAILURE;
+        if ($user instanceof User) {
+            $isValid = $this->passwordHasher->isPasswordValid($user, $plainPassword);
+            $output->writeln($isValid ? '<info>VALID (user)</info>' : '<error>INVALID (user)</error>');
+
+            return $isValid ? Command::SUCCESS : Command::FAILURE;
         }
 
-        $isValid = $this->passwordHasher->isPasswordValid($user, $plainPassword);
-        $output->writeln($isValid ? '<info>VALID</info>' : '<error>INVALID</error>');
+        $society = $this->societyRepository->findOneBy(['email' => $email]);
+        if ($society instanceof Society) {
+            $isValid = $this->passwordHasher->isPasswordValid($society, $plainPassword);
+            $output->writeln($isValid ? '<info>VALID (society)</info>' : '<error>INVALID (society)</error>');
 
-        return $isValid ? Command::SUCCESS : Command::FAILURE;
+            return $isValid ? Command::SUCCESS : Command::FAILURE;
+        }
+
+        $output->writeln('<error>Account not found (user or society).</error>');
+
+        return Command::FAILURE;
     }
 }
-

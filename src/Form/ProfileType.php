@@ -5,9 +5,7 @@ namespace App\Form;
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
@@ -34,18 +32,6 @@ class ProfileType extends AbstractType
                         'mimeTypesMessage' => 'Veuillez uploader une image (JPG, PNG ou WEBP).',
                     ]),
                 ],
-            ])
-            ->add('nom', TextType::class, [
-                'label' => 'Nom',
-                'attr' => ['class' => 'form-control'],
-            ])
-            ->add('prenom', TextType::class, [
-                'label' => 'Prénom',
-                'attr' => ['class' => 'form-control'],
-            ])
-            ->add('email', EmailType::class, [
-                'label' => 'Adresse email',
-                'attr' => ['class' => 'form-control'],
             ])
             ->add('plainPassword', PasswordType::class, [
                 'label' => 'Nouveau mot de passe (laisser vide pour garder l\'actuel)',

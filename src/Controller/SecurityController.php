@@ -12,6 +12,17 @@ class SecurityController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // If already authenticated, do not show the login page again.
+        // Redirect to the right dashboard based on user type.
+        if ($this->getUser()) {
+            $this->addFlash('info', 'Vous êtes déjà connecté. Déconnectez-vous pour changer de compte.');
+            if ($this->isGranted('ROLE_ADMIN')) {
+                return $this->redirectToRoute('app_admin_dashboard');
+            }
+
+            return $this->redirectToRoute('app_user_home');
+        }
+
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
 

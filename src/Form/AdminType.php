@@ -56,9 +56,9 @@ class AdminType extends AbstractType
             ->add('adminRole', ChoiceType::class, [
                 'label' => 'Rôle admin',
                 'choices' => [
-                    'Super Admin' => Admin::BUSINESS_ROLE_SUPER_ADMIN,
-                    'Gestionnaire' => Admin::BUSINESS_ROLE_GESTIONNAIRE,
-                    'Modérateur' => Admin::BUSINESS_ROLE_MODERATEUR,
+                    'SUPERADMIN' => Admin::BUSINESS_ROLE_SUPERADMIN,
+                    'MODERATOR' => Admin::BUSINESS_ROLE_MODERATOR,
+                    'MANAGER' => Admin::BUSINESS_ROLE_MANAGER,
                 ],
                 'placeholder' => 'Choisir un rôle',
                 'required' => true,

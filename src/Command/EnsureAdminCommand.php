@@ -31,7 +31,7 @@ final class EnsureAdminCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'Admin email')
             ->addArgument('password', InputArgument::REQUIRED, 'Plain password')
-            ->addArgument('role', InputArgument::OPTIONAL, 'Business role (super_admin|gestionnaire|moderateur)', Admin::BUSINESS_ROLE_SUPER_ADMIN);
+            ->addArgument('role', InputArgument::OPTIONAL, 'Business role (SUPERADMIN|MODERATOR|MANAGER)', Admin::BUSINESS_ROLE_SUPERADMIN);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -69,4 +69,3 @@ final class EnsureAdminCommand extends Command
         return Command::SUCCESS;
     }
 }
-

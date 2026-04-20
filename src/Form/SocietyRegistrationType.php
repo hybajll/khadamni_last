@@ -6,6 +6,7 @@ use App\Entity\Society;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
@@ -28,29 +29,37 @@ class SocietyRegistrationType extends AbstractType
                 'required' => true,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Email professionnel'],
             ])
-            ->add('password', PasswordType::class, [
-                'label' => 'Mot de passe',
+            ->add('password', RepeatedType::class, [
+                'type' => PasswordType::class,
                 'required' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'Mot de passe (min 4 caracteres)'],
+                'invalid_message' => 'Les mots de passe ne correspondent pas.',
+                'first_options' => [
+                    'label' => 'Mot de passe',
+                    'attr' => ['class' => 'form-control', 'placeholder' => 'Mot de passe (min 4 caractères)'],
+                ],
+                'second_options' => [
+                    'label' => 'Confirmer le mot de passe',
+                    'attr' => ['class' => 'form-control', 'placeholder' => 'Confirmez le mot de passe'],
+                ],
             ])
             ->add('phone', TelType::class, [
                 'label' => 'Telephone',
-                'required' => false,
+                'required' => true,
                 'attr' => ['class' => 'form-control', 'placeholder' => '+216 XX XXX XXX'],
             ])
             ->add('address', TextType::class, [
                 'label' => 'Adresse',
-                'required' => false,
+                'required' => true,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Adresse de siege social'],
             ])
             ->add('domain', TextType::class, [
                 'label' => 'Domaine d\'activite',
-                'required' => false,
+                'required' => true,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'ex: Technologie, Finance, Sante'],
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description de l\'entreprise',
-                'required' => false,
+                'required' => true,
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => 'Decrivez votre entreprise en quelques lignes',
@@ -59,7 +68,7 @@ class SocietyRegistrationType extends AbstractType
             ])
             ->add('website', UrlType::class, [
                 'label' => 'Site web',
-                'required' => false,
+                'required' => true,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'https://www.example.com'],
             ]);
     }

@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Offres{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+        <div>
+            <h1 class="h4 mb-1 text-darken">Offres</h1>
+            <div class="text-muted">Espace modérateur (liste des offres actives). Suppression réservée au superadmin.</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <form method="get" class="d-flex gap-2" action="{{ path('app_admin_offers') }}">
+                <input type="search" name="q" value="{{ q|default('') }}" class="form-control" placeholder="Rechercher (titre, description)">
+                <button class="btn btn-primary" type="submit">Rechercher</button>
+                {% if q|default('') %}
+                    <a class="btn btn-light border" href="{{ path('app_admin_offers') }}">Reset</a>
+                {% endif %}
+            </form>
+            <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Titre</th>
+                            <th>Entreprise</th>
+                            <th>Contrat</th>
+                            <th>Lieu</th>
+                            <th>Active</th>
+                            {% if is_granted('ROLE_SUPERADMIN') %}<th class="text-end">Actions</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in offers %}
+                            <tr>
+                                <td>{{ o.id }}</td>
+                                <td class="fw-semibold">{{ o.title }}</td>
+                                <td class="text-muted">{{ o.society ? o.society.name : '-' }}</td>
+                                <td class="text-muted">{{ o.contractType }}</td>
+                                <td class="text-muted">{{ o.location ?: '-' }}</td>
+                                <td>
+                                    {% if o.active %}
+                                        <span class="badge text-bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                {% if is_granted('ROLE_SUPERADMIN') %}
+                                    <td class="text-end">
+                                        <form method="post" action="{{ path('app_admin_offer_delete', {id: o.id}) }}" onsubmit="return confirm('Supprimer cette offre ?');" class="d-inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_offer_' ~ o.id) }}">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="{{ is_granted('ROLE_SUPERADMIN') ? 7 : 6 }}" class="text-center text-muted py-4">Aucune offre.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

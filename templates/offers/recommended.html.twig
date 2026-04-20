@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offres compatibles - Khadamni{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
+        <h1 class="h4 mb-1 text-darken">Offres compatibles</h1>
+        <p class="text-muted mb-0">
+            Suggestions basées sur votre CV (score de compatibilité). Ce score n'est pas une garantie d'acceptation.
+        </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <a href="{{ path('app_user_offers') }}" class="btn btn-secondary">Toutes les offres</a>
+        <a href="{{ path('app_cv_manage') }}" class="btn btn-light border">Mon CV</a>
+
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span class="text-muted small">Seuil :</span>
+            <a class="btn btn-sm {{ min_score == 45 ? 'btn-primary' : 'btn-light border' }}" href="{{ path('app_user_offers_recommended', {min: 45}) }}">45%</a>
+            <a class="btn btn-sm {{ min_score == 60 ? 'btn-primary' : 'btn-light border' }}" href="{{ path('app_user_offers_recommended', {min: 60}) }}">60%</a>
+            <a class="btn btn-sm {{ min_score == 75 ? 'btn-primary' : 'btn-light border' }}" href="{{ path('app_user_offers_recommended', {min: 75}) }}">75%</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-4">
+            {% if show_top_anyway %}
+                <div class="alert alert-light border">
+                    Aucune offre ne dépasse le seuil choisi pour le moment. Voici les meilleures offres détectées selon votre CV.
+                </div>
+            {% endif %}
+
+            {% if results is empty %}
+                <div class="text-muted">Aucune offre ne dépasse le seuil choisi pour le moment.</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Offre</th>
+                            <th style="width: 120px;">Score</th>
+                            <th>Matching</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in results %}
+                            <tr>
+                                <td class="fw-semibold">{{ row.job_title }}</td>
+                                <td>
+                                    <span class="badge text-bg-{% if row.score >= 75 %}success{% elseif row.score >= 60 %}warning{% else %}secondary{% endif %}">
+                                        {{ row.score }}%
+                                    </span>
+                                </td>
+                                <td class="text-muted">
+                                    {% if row.matching_skills is empty %}
+                                        -
+                                    {% else %}
+                                        {{ row.matching_skills|slice(0, 8)|join(', ') }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if row.offer_id %}
+                                        <a class="btn btn-sm btn-light border" href="{{ path('app_offer_public_show', {id: row.offer_id}) }}">Détails</a>
+                                        <form method="post" action="{{ path('app_user_offers_apply', {id: row.offer_id}) }}" class="d-inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('apply_offer_' ~ row.offer_id) }}">
+                                            <button type="submit" class="btn btn-sm btn-primary">Postuler</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

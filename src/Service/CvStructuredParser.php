@@ -58,11 +58,26 @@ final class CvStructuredParser
     {
         $line = trim($line);
         $known = [
-            'résumé', 'resume',
+            // French / English
+            'résumé', 'resume', 'profil', 'profile',
             'compétences', 'competences', 'skills',
-            'expériences', 'experiences', 'projets', 'projets / expériences', 'expériences / projets',
+            'expériences', 'experiences', 'experience',
+            'projets', 'projects', 'projets / expériences', 'expériences / projets',
             'formation', 'éducation', 'education',
-            'langues', 'centres d’intérêt', 'centres d\'intérêt', 'contact',
+            'langues', 'languages',
+            'certifications', 'certification',
+            'centres d’intérêt', 'centres d\'intérêt', 'interests',
+            'contact',
+
+            // Arabic (common CV headings)
+            'الملخص', 'نبذة', 'النبذة',
+            'الخبرات', 'الخبرة', 'التجارب',
+            'التعليم', 'الدراسة', 'التكوين',
+            'المهارات', 'الكفاءات',
+            'المشاريع', 'المشروع',
+            'اللغات',
+            'الشهادات',
+            'التواصل', 'الاتصال',
         ];
 
         $lower = mb_strtolower(rtrim($line, ':'));
@@ -92,4 +107,3 @@ final class CvStructuredParser
         return $line === '' ? '—' : $line;
     }
 }
-

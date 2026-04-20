@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\Society;
 use App\Entity\User;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
@@ -16,6 +17,10 @@ class UserChecker implements UserCheckerInterface
 
     public function checkPostAuth(UserInterface $user): void
     {
+        if ($user instanceof Society && !$user->isActive()) {
+            throw new CustomUserMessageAccountStatusException('Votre compte société est désactivé. Contactez un administrateur.');
+        }
+
         if (!$user instanceof User) {
             return;
         }
@@ -25,4 +30,3 @@ class UserChecker implements UserCheckerInterface
         }
     }
 }
-

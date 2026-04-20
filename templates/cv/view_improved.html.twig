@@ -2,18 +2,164 @@
 
 {% block title %}CV amélioré{% endblock %}
 
+{% import _self as cvui %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .cv-sheet {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .cv-sheet .cv-header {
+            padding: 18px 18px 14px 18px;
+            border-bottom: 2px solid var(--kh-orange);
+            background: linear-gradient(135deg, rgba(10,35,64,0.03) 0%, rgba(255,140,0,0.06) 100%);
+        }
+        .cv-sheet .cv-name {
+            font-weight: 800;
+            font-size: 1.15rem;
+            margin: 0;
+            color: var(--kh-navy);
+        }
+        .cv-sheet .cv-meta {
+            margin-top: 6px;
+            color: #334155;
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .cv-sheet .cv-title {
+            margin-top: 8px;
+            font-weight: 700;
+            color: var(--kh-text);
+        }
+        .cv-sheet .cv-body {
+            padding: 16px 18px 18px 18px;
+        }
+        .cv-grid {
+            display: grid;
+            grid-template-columns: 0.95fr 2.05fr;
+            gap: 18px;
+        }
+        .cv-left {
+            border-right: 1px solid #f1f5f9;
+            padding-right: 14px;
+        }
+        .cv-section-title {
+            font-size: 0.78rem;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: #475569;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+        }
+        .cv-items {
+            margin: 0;
+            padding-left: 16px;
+        }
+        .cv-items li {
+            margin: 0 0 6px 0;
+        }
+        .cv-paragraph {
+            white-space: pre-wrap;
+            margin: 0;
+            color: #0f172a;
+        }
+        @media (max-width: 991px) {
+            .cv-grid { grid-template-columns: 1fr; }
+            .cv-left { border-right: none; padding-right: 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; }
+        }
+    </style>
+{% endblock %}
+
+{% macro render_sheet(cv, layout, fallbackText) %}
+    <div class="cv-sheet">
+        <div class="cv-header">
+            <p class="cv-name">
+                {% if cv.user and (cv.user.prenom or cv.user.nom) %}
+                    {{ (cv.user.prenom ?: '') ~ ' ' ~ (cv.user.nom ?: '') }}
+                {% else %}
+                    {{ cv.user ? cv.user.email : 'CV' }}
+                {% endif %}
+            </p>
+            <div class="cv-meta">
+                {% if cv.user %}<span>{{ cv.user.email }}</span>{% endif %}
+                {% if cv.user and cv.user.type %}<span>{{ cv.user.type|upper }}</span>{% endif %}
+            </div>
+            {% if cv.titre %}
+                <div class="cv-title">{{ cv.titre }}</div>
+            {% endif %}
+        </div>
+
+        <div class="cv-body">
+            {% if layout is defined and layout.left is defined %}
+                <div class="cv-grid">
+                    <div class="cv-left">
+                        {% for section in layout.left %}
+                            <div class="mb-3">
+                                <div class="cv-section-title">{{ section.title }}</div>
+                                <ul class="cv-items">
+                                    {% for item in section.items %}
+                                        <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="cv-right">
+                        {% for section in layout.right %}
+                            <div class="mb-3">
+                                <div class="cv-section-title">{{ section.title }}</div>
+                                <ul class="cv-items">
+                                    {% for item in section.items %}
+                                        <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <p class="cv-paragraph">{{ fallbackText }}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro render_cv(sections, fallbackText) %}
+    {% if sections is defined and sections is iterable and sections|length > 0 %}
+        {% for section in sections %}
+            <div class="mb-3">
+                <div class="small text-uppercase text-muted fw-semibold mb-2">{{ section.title }}</div>
+                <ul class="mb-0 ps-3">
+                    {% for item in section.items %}
+                        <li class="mb-1">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div style="white-space: pre-wrap;">{{ fallbackText }}</div>
+    {% endif %}
+{% endmacro %}
+
 {% block body %}
 <div class="container py-4">
     <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
-        <h1 class="h4 mb-1 text-darken">CV amélioré (simulation IA)</h1>
-        <p class="text-muted mb-0">Comparez la version originale et la version améliorée.</p>
+        <h1 class="h4 mb-1 text-darken">CV amélioré (IA)</h1>
+        <p class="text-muted mb-0">Comparez la version originale et la version améliorée (si elle existe).</p>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body p-4">
-                    <h2 class="h6 text-uppercase text-muted">Original</h2>
+                    <h2 class="h6 text-uppercase text-muted mb-3">Original</h2>
                     <div class="bg-white border rounded-3 p-3" style="white-space: pre-wrap;">{{ cv.contenuOriginal }}</div>
                 </div>
             </div>
@@ -22,8 +168,14 @@
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body p-4">
-                    <h2 class="h6 text-uppercase text-muted">Amélioré</h2>
-                    <div class="bg-white border rounded-3 p-3" style="white-space: pre-wrap;">{{ cv.contenuAmeliore }}</div>
+                    <h2 class="h6 text-uppercase text-muted mb-3">Amélioré</h2>
+                    {% if cv.contenuAmeliore %}
+                        {{ cvui.render_sheet(cv, improved_layout, cv.contenuAmeliore) }}
+                    {% else %}
+                        <div class="alert alert-light border mb-0">
+                            La version améliorée n'est plus stockée. La dernière version est visible dans “Mon CV”.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

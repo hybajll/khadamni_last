@@ -50,6 +50,40 @@ class OfferRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find all offers for a society (active + inactive).
+     */
+    public function findAllBySociety(Society $society): array
+    {
+        return $this->createQueryBuilder('o')
+            ->where('o.society = :society')
+            ->setParameter('society', $society)
+            ->orderBy('o.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Search offers for a specific society (active + inactive).
+     */
+    public function searchOffersForSociety(Society $society, ?string $keyword = null): array
+    {
+        $query = $this->createQueryBuilder('o')
+            ->where('o.society = :society')
+            ->setParameter('society', $society);
+
+        if ($keyword) {
+            $query
+                ->andWhere('o.title LIKE :keyword OR o.description LIKE :keyword')
+                ->setParameter('keyword', '%'.$keyword.'%');
+        }
+
+        return $query
+            ->orderBy('o.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Find offers by domain
      */
     public function findByDomain(string $domain)

@@ -11,10 +11,33 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
+        society_provider:
+            entity:
+                class: App\Entity\Society
+                property: email
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        society:
+            pattern: ^/society
+            lazy: true
+            provider: society_provider
+            user_checker: App\Security\UserChecker
+
+            form_login:
+                login_path: society_login
+                check_path: society_login
+                enable_csrf: true
+                csrf_token_id: authenticate
+                username_parameter: _username
+                password_parameter: _password
+                success_handler: App\Security\SocietyLoginSuccessHandler
+
+            logout:
+                path: society_logout
+                target: /
+                invalidate_session: true
         main:
             lazy: true
             provider: app_user_provider
@@ -33,7 +56,8 @@ security:
 
             logout:
                 path: app_logout
-                target: app_login
+                target: /
+                invalidate_session: true
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
@@ -44,10 +68,22 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/ajoutuser, roles: PUBLIC_ACCESS }
+        - { path: ^/society/login, roles: PUBLIC_ACCESS }
+        - { path: ^/society/register, roles: PUBLIC_ACCESS }
+        - { path: ^/society/subscription, roles: ROLE_SOCIETY }
+        - { path: ^/society/payment, roles: ROLE_SOCIETY }
+        - { path: ^/society/(dashboard|home|profile|offers), roles: ROLE_SOCIETY }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/user, roles: ROLE_USER }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/cv, roles: ROLE_USER }
+        - { path: ^/subscription, roles: ROLE_USER }
+        - { path: ^/payment, roles: ROLE_USER }
+
+    role_hierarchy:
+        ROLE_SUPERADMIN: [ROLE_MODERATOR, ROLE_MANAGER, ROLE_ADMIN]
+        ROLE_MODERATOR: [ROLE_ADMIN]
+        ROLE_MANAGER: [ROLE_ADMIN]
 
 when@test:
     security:

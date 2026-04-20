@@ -8,12 +8,14 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: AdminRepository::class)]
 class Admin extends User
 {
-    public const BUSINESS_ROLE_SUPER_ADMIN = 'super_admin';
-    public const BUSINESS_ROLE_GESTIONNAIRE = 'gestionnaire';
-    public const BUSINESS_ROLE_MODERATEUR = 'moderateur';
+    // Business roles stored in user.role (nullable for non-admins)
+    public const BUSINESS_ROLE_SUPERADMIN = 'SUPERADMIN';
+    public const BUSINESS_ROLE_MODERATOR = 'MODERATOR';
+    public const BUSINESS_ROLE_MANAGER = 'MANAGER';
 
     public function isSuperAdmin(): bool
     {
-        return $this->getAdminRole() === self::BUSINESS_ROLE_SUPER_ADMIN;
+        $role = strtoupper((string) $this->getAdminRole());
+        return $role === self::BUSINESS_ROLE_SUPERADMIN || $role === 'SUPER_ADMIN';
     }
 }

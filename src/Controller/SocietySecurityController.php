@@ -13,6 +13,12 @@ class SocietySecurityController extends AbstractController
     #[Route('/login', name: 'society_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // If already authenticated as a society, go to the dashboard directly.
+        if ($this->getUser() && $this->isGranted('ROLE_SOCIETY')) {
+            $this->addFlash('info', 'Vous êtes déjà connecté. Déconnectez-vous pour changer de compte.');
+            return $this->redirectToRoute('society_dashboard');
+        }
+
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastEmail = $authenticationUtils->getLastUsername();
 

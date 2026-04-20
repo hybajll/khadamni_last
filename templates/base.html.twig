@@ -136,6 +136,30 @@
             main {
                 background: var(--kh-cream);
             }
+
+            .sub-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.14);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: rgba(255, 255, 255, 0.92);
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+            .sub-badge .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #22c55e;
+                box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+            }
+            .sub-badge .dot.off {
+                background: #f59e0b;
+                box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+            }
         </style>
 
         {% block stylesheets %}{% endblock %}
@@ -144,7 +168,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
             <div class="container">
                 {# Lien Logo Dynamique #}
-                <a class="navbar-brand" href="{% if app.user %}{% if 'ROLE_SOCIETY' in app.user.roles %}{{ path('society_home') }}{% elseif app.user.type == 'admin' %}{{ path('app_admin_dashboard') }}{% else %}{{ path('app_user_home') }}{% endif %}{% else %}{{ path('app_login') }}{% endif %}">
+                <a class="navbar-brand" href="{% if app.user %}{% if 'ROLE_SOCIETY' in app.user.roles %}{{ path('society_home') }}{% elseif app.user.type == 'admin' %}{{ path('app_admin_dashboard') }}{% else %}{{ path('app_user_home') }}{% endif %}{% else %}{{ path('app_home') }}{% endif %}">
                     <div class="logo-khadamni">
                         <span class="logo-text">خدمني</span>
                         <small>خدمتك معانا مضمونة</small>
@@ -158,12 +182,26 @@
                 <div class="collapse navbar-collapse" id="navbarMain">
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         {% if app.user %}
+                            {% set isSociety = 'ROLE_SOCIETY' in app.user.roles %}
                             {# MENU ENTREPRISE #}
-                            {% if 'ROLE_SOCIETY' in app.user.roles %}
+                            {% if isSociety %}
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_home') }}">Accueil</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('society_dashboard') }}">Offres</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_offers_feed') }}">Offres</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_offer_new') }}">Publier</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_profile') }}">Profil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_subscription') }}">Abonnement</a></li>
+                                <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
+                                    {% set remaining = 1 - (app.user.freeUsageCount ?? 0) %}
+                                    <a class="text-decoration-none" href="{{ path('society_subscription') }}">
+                                        <span class="sub-badge">
+                                            {% if app.user.subscriptionEndDate and app.user.subscriptionEndDate > date() %}
+                                                <span class="dot"></span>Abonné
+                                            {% else %}
+                                                <span class="dot off"></span>Free: {{ remaining > 0 ? remaining : 0 }}/1
+                                            {% endif %}
+                                        </span>
+                                    </a>
+                                </li>
                             
                             {# MENU ADMIN #}
                             {% elseif app.user.type == 'admin' %}
@@ -175,14 +213,27 @@
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_profile') }}">Profil</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_cv_manage') }}">CV</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_user_reclamation_index') }}">Réclamations</a></li>
+                                <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
+                                    {% set remaining = 2 - (app.user.freeUsageCount ?? 0) %}
+                                    <a class="text-decoration-none" href="{{ path('app_subscription') }}">
+                                        <span class="sub-badge">
+                                            {% if app.user.subscriptionEndDate and app.user.subscriptionEndDate > date() %}
+                                                <span class="dot"></span>Abonné
+                                            {% else %}
+                                                <span class="dot off"></span>Free: {{ remaining > 0 ? remaining : 0 }}/2
+                                            {% endif %}
+                                        </span>
+                                    </a>
+                                </li>
                             {% endif %}
-                            <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ path(isSociety ? 'society_logout' : 'app_logout') }}">Déconnexion</a></li>
                             <li class="nav-item ms-lg-2 d-flex align-items-center">
-                                <a class="nav-link py-1" href="{{ path('app_profile') }}" title="Mon profil">
-                                    {% if app.user.avatarPath %}
+                                <a class="nav-link py-1" href="{{ path(isSociety ? 'society_profile' : 'app_profile') }}" title="Mon profil">
+                                    {% if not isSociety and app.user.avatarPath %}
                                         <img src="{{ asset(app.user.avatarPath) }}" alt="Avatar" class="nav-avatar">
                                     {% else %}
-                                        <span class="nav-avatar-fallback">{{ (app.user.prenom ?: app.user.email)|first|upper }}</span>
+                                        {% set displayName = isSociety ? (app.user.name ?: app.user.email) : (app.user.prenom ?: app.user.email) %}
+                                        <span class="nav-avatar-fallback">{{ displayName|first|upper }}</span>
                                     {% endif %}
                                 </a>
                             </li>
@@ -209,7 +260,7 @@
         </nav>
 
         <main class="py-5">
-            <div class="container">
+            {% block main_container_open %}<div class="container">{% endblock %}
                 {% for label, messages in app.flashes %}
                     <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
                         {{ messages|first }}
@@ -218,11 +269,16 @@
                 {% endfor %}
 
                 {% block body %}{% endblock %}
-            </div>
+            {% block main_container_close %}</div>{% endblock %}
         </main>
 
         <footer class="bg-white border-top py-3 text-center text-muted">
-            <div class="container">© {{ "now"|date('Y') }} Khadamni</div>
+            <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+                <div>© {{ "now"|date('Y') }} Khadamni</div>
+                <a class="text-decoration-none text-orange fw-semibold" href="{{ path('app_home') }}">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Retour à l’accueil
+                </a>
+            </div>
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

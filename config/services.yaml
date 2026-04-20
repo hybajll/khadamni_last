@@ -6,6 +6,13 @@
 parameters:
     app.motivational_video_embed_url: '%env(string:MOTIVATIONAL_VIDEO_EMBED_URL)%'
     app.motivational_video_path: '%env(string:MOTIVATIONAL_VIDEO_PATH)%'
+    app.openai_api_key: '%env(string:OPENAI_API_KEY)%'
+    app.openai_model: '%env(string:OPENAI_MODEL)%'
+    app.ai_provider: '%env(string:AI_PROVIDER)%'
+    app.openrouter_api_key: '%env(string:OPENROUTER_API_KEY)%'
+    app.openrouter_model: '%env(string:OPENROUTER_MODEL)%'
+    app.gemini_api_key: '%env(string:GEMINI_API_KEY)%'
+    app.gemini_model: '%env(string:GEMINI_MODEL)%'
 
 services:
     # default configuration for services in *this* file
@@ -21,6 +28,27 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # --- AI Providers (CV improvement) ---
+    # We define these here (not in config/packages) to ensure Symfony always loads them.
+    App\Service\OpenAiResponsesClient:
+        arguments:
+            $apiKey: '%app.openai_api_key%'
+            $model: '%app.openai_model%'
+
+    App\Service\OpenRouterChatClient:
+        arguments:
+            $apiKey: '%app.openrouter_api_key%'
+            $model: '%app.openrouter_model%'
+
+    App\Service\GeminiGenerateContentClient:
+        arguments:
+            $apiKey: '%app.gemini_api_key%'
+            $model: '%app.gemini_model%'
+
+    App\Service\LlmClientFactory:
+        arguments:
+            $provider: '%app.ai_provider%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
