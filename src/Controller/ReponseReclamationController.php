@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Reclamation;
 use App\Entity\ReponseReclamation;
 use App\Entity\Admin;
-use App\Enum\StatutReclamation; // Assurez-vous que cet import existe
+use App\Enum\StatutReclamation;
 use App\Repository\ReclamationRepository;
 use App\Repository\ReponseReclamationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,9 +19,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/reclamations')]
 class ReponseReclamationController extends AbstractController
 {
-    /**
-     * Liste toutes les réclamations pour l'admin
-     */
     #[Route('/', name: 'app_admin_reclamations_index', methods: ['GET'])]
     public function index(ReclamationRepository $reclamationRepository): Response
     {
@@ -30,72 +27,64 @@ class ReponseReclamationController extends AbstractController
         ]);
     }
 
-    /**
-     * Interface de chat pour l'admin
-     */
     #[Route('/{id}/chat', name: 'app_admin_reclamation_chat', methods: ['GET', 'POST'])]
     public function chat(
         Reclamation $reclamation, 
         Request $request, 
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        ReponseReclamationRepository $reponseRepo
     ): Response {
         
-        // --- DEBUT TRAITEMENT DU FORMULAIRE (POST) ---
         if ($request->isMethod('POST')) {
             $messageContent = $request->request->get('message');
             $token = $request->request->get('_token');
 
-            if (!$this->isCsrfTokenValid('admin_reply' . $reclamation->getIdReclamation(), $token)) {
-                $this->addFlash('error', 'Token de sécurité invalide.');
-                return $this->redirectToRoute('app_admin_reclamation_chat', ['id' => $reclamation->getIdReclamation()]);
+            if ($this->isCsrfTokenValid('admin_reply' . $reclamation->getIdReclamation(), $token)) {
+                if (!empty(trim($messageContent))) {
+                    $reponse = new ReponseReclamation();
+                    $reponse->setReclamation($reclamation);
+                    $reponse->setMessage($messageContent);
+                    $reponse->setAuteur($this->getUser()); 
+                    $reponse->setDateReponse(new \DateTime());
+
+                    $reclamation->setStatut(StatutReclamation::EN_COURS);
+                    
+                    $entityManager->persist($reponse);
+                    $entityManager->flush();
+                    
+                    return $this->redirectToRoute('app_admin_reclamation_chat', ['id' => $reclamation->getIdReclamation()]);
+                }
             }
+        }
 
-            if (!empty(trim($messageContent))) {
-                $reponse = new ReponseReclamation();
-                $reponse->setReclamation($reclamation);
-                $reponse->setMessage($messageContent);
-                $reponse->setAuteur($this->getUser()); 
-                $reponse->setDateReponse(new \DateTime());
+        // On récupère TOUS les messages pour être sûr que l'IA apparaisse
+        $messages = $reponseRepo->findBy(['reclamation' => $reclamation], ['date_reponse' => 'ASC']);
 
-                // LOGIQUE : Changement de statut automatique
-                $reclamation->setStatut(StatutReclamation::EN_COURS);
-                $reclamation->setDateModification(new \DateTime());
-
-                $entityManager->persist($reponse);
-                $entityManager->flush();
-                
-                return $this->redirectToRoute('app_admin_reclamation_chat', [
-                    'id' => $reclamation->getIdReclamation()
-                ]);
-            }
-        } // <--- C'était cette accolade qui manquait !
-
-        // --- AFFICHAGE DE LA PAGE (GET) ---
         return $this->render('admin/reclamation/chat.html.twig', [
             'reclamation' => $reclamation,
-            'messages' => $reclamation->getReponseReclamations(),
+            'messages' => $messages,
         ]);
     }
 
-    /**
-     * API pour les notifications en temps réel
-     */
     #[Route('/api/check-messages', name: 'app_admin_check_messages', methods: ['GET'])]
     public function checkNewMessages(ReponseReclamationRepository $reponseRepo): Response
     {
-        $recentMessages = $reponseRepo->findRecentMessagesForAdmin(); 
+        // On récupère les 10 derniers messages globaux
+        $recentMessages = $reponseRepo->findBy([], ['date_reponse' => 'DESC'], 10); 
         $notifications = [];
         $processedIds = [];
 
         foreach ($recentMessages as $msg) {
             $rec = $msg->getReclamation();
-            $recId = $rec->getIdReclamation();
+            if (!$rec) continue;
 
+            $recId = $rec->getIdReclamation();
             if (in_array($recId, $processedIds)) continue;
 
-            if (!($msg->getAuteur() instanceof Admin)) {
+            // On notifie si c'est un message client OU un message de l'IA (auteur null)
+            if ($msg->getAuteur() === null || !($msg->getAuteur() instanceof Admin)) {
                 $notifications[] = [
-                    'username' => $rec->getUser() ? $rec->getUser()->getNom() : 'Anonyme',
+                    'username' => $msg->getAuteur() ? $rec->getUser()->getNom() : 'Assistant IA',
                     'reclamationId' => $recId,
                     'text' => mb_strimwidth($msg->getMessage(), 0, 45, "...")
                 ];

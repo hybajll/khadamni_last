@@ -13,12 +13,16 @@ parameters:
     app.openrouter_model: '%env(string:OPENROUTER_MODEL)%'
     app.gemini_api_key: '%env(string:GEMINI_API_KEY)%'
     app.gemini_model: '%env(string:GEMINI_MODEL)%'
-
+    gemini_api_key: '%env(GEMINI_API_KEY)%'
+    gemini_model: '%env(GEMINI_MODEL)%'
 services:
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $geminiApiKey: '%gemini_api_key%'
+            $geminiModel: '%gemini_model%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

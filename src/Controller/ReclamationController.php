@@ -11,6 +11,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\NotificationService;
+use App\Service\AiAssistantService;
 
 #[Route('/admin/reclamations')]
 class ReclamationController extends AbstractController
@@ -41,10 +43,13 @@ class ReclamationController extends AbstractController
             'totalPages' => $totalPages,
         ]);
     }
-
-    #[Route('/new', name: 'app_reclamation_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+#[Route('/new', name: 'app_reclamation_new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        AiAssistantService $aiService,
+        NotificationService $notificationService
+    ): Response {
         $reclamation = new Reclamation();
         $reclamation->setUser($this->getUser());
 
@@ -52,10 +57,25 @@ class ReclamationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // 1. Persister la réclamation
             $entityManager->persist($reclamation);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Réclamation créée.');
+            // 2. Déterminer si c'est simple ou complexe
+            $isSimple = $aiService->processNewReclamation($reclamation);
+
+            // 3. IA : Générer, Enregistrer en BDD et récupérer l'objet réponse
+            $reply = $notificationService->generateAndStoreAiReply($reclamation, null);
+
+            // 4. Envoyer l'email avec le message déjà stocké
+            $notificationService->sendStatusUpdateEmail($reclamation, $reply->getMessage());
+
+            // 5. Flash messages
+            if (!$isSimple) {
+                $this->addFlash('warning', 'Réclamation complexe : intervention admin requise.');
+            }
+            $this->addFlash('success', 'Réclamation créée et réponse IA envoyée.');
+
             return $this->redirectToRoute('app_admin_reclamation_index');
         }
 
@@ -65,8 +85,13 @@ class ReclamationController extends AbstractController
     }
 
     #[Route('/{id}/statut', name: 'app_admin_reclamation_set_statut', methods: ['POST'])]
-    public function setStatut(int $id, Request $request, ReclamationRepository $reclamationRepository, EntityManagerInterface $entityManager): Response 
-    {
+    public function setStatut(
+        int $id, 
+        Request $request, 
+        ReclamationRepository $reclamationRepository, 
+        EntityManagerInterface $entityManager,
+        NotificationService $notificationService
+    ): Response {
         $reclamation = $reclamationRepository->find($id);
         if (!$reclamation) throw $this->createNotFoundException();
 
@@ -76,10 +101,17 @@ class ReclamationController extends AbstractController
             $reclamation->setStatut($nouveauStatut);
             $reclamation->setDateModification(new \DateTime());
             $entityManager->flush();
-            $this->addFlash('success', 'Statut mis à jour.');
+
+            if ($nouveauStatut === StatutReclamation::RESOLUE) {
+                // Ici on laisse l'email générer son propre message IA si besoin
+                $notificationService->sendStatusUpdateEmail($reclamation);
+                $this->addFlash('success', 'Statut RESOLU et email envoyé.');
+            } else {
+                $this->addFlash('success', 'Statut mis à jour.');
+            }
         }
 
-        return $this->redirectToRoute('app_admin_reclamation_index', ['page' => $request->query->get('page', 1)]);
+        return $this->redirectToRoute('app_admin_reclamation_index');
     }
 
     #[Route('/{id}/delete', name: 'app_admin_reclamation_delete', methods: ['POST'])]

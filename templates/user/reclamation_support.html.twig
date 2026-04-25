@@ -10,7 +10,6 @@
     .ticket-card { background: #efe3c8; border-radius: 12px; border: none; margin-bottom: 12px; transition: all 0.2s ease; border-left: 4px solid #ccd0d5; cursor: pointer; }
     .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     
-    /* Couleurs des bordures selon statut */
     .status-resolue { border-left-color: #45bd62; }
     .status-rejetee { border-left-color: #f44336; }
     .status-attente { border-left-color: #f7b928; }
@@ -19,7 +18,12 @@
     .bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 10px; font-size: 0.95rem; line-height: 1.4; position: relative; }
     .bubble-user { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 4px; }
     .bubble-admin { align-self: flex-start; background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
+    
+    /* Style spécifique pour l'IA */
+    .bubble-ai { border-left: 4px solid #f1c54b; }
+    
     .bubble-time { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 5px; text-align: right; }
+    .sender-name { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; display: block; }
     .btn-create { background: #1877f2; color: white; border-radius: 25px; font-weight: 600; padding: 8px 20px; border: none; }
 </style>
 
@@ -35,8 +39,8 @@
 
 <div class="container mt-4">
     {# Messages flash #}
-    {% for message in app.flashes('error') %}
-        <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4">
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show rounded-pill px-4">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -92,16 +96,20 @@
                 <i class="fas fa-chevron-right text-muted"></i>
             </div>
             
+            {# Injection des données JSON pour le JS #}
             <script type="application/json" id="data-{{ rec.idReclamation }}">
                 [
                     {
                         "type": "user", 
+                        "sender": "VOUS",
                         "msg": "{{ rec.description|escape('js') }}", 
                         "time": "{{ rec.dateCreation|date('H:i') }}"
                     }
                     {% for rep in rec.reponseReclamations %}
                     ,{
-                        "type": "{{ rep.isAuteurAdmin ? 'admin' : 'user' }}", 
+                        "type": "{{ rep.auteur is null or rep.isAuteurAdmin ? 'admin' : 'user' }}", 
+                        "isAi": {{ rep.auteur is null ? 'true' : 'false' }},
+                        "sender": "{{ rep.auteur is null ? 'ASSISTANT IA' : (rep.isAuteurAdmin ? 'SUPPORT ADMIN' : 'VOUS') }}",
                         "msg": "{{ rep.message|escape('js') }}", 
                         "time": "{{ rep.dateReponse|date('H:i') }}"
                     }
@@ -117,6 +125,7 @@
     {% endfor %}
 </div>
 
+{# MODALE DE CHAT #}
 <div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
@@ -131,12 +140,12 @@
                 <form id="chatForm" method="POST" class="w-100 d-flex align-items-center">
                     <input type="hidden" name="_token" id="chatToken">
                     <div class="input-group">
-                        <input type="text" name="message" id="messageInput" class="form-control border-2 bg-light rounded-pill ps-4" placeholder="Écrire une réponse..." required>
+                        <input type="text" name="message" id="messageInput" class="form-control border-2 bg-light rounded-pill ps-4" placeholder="Écrire une réponse..." required autocomplete="off">
                         <button type="submit" class="btn btn-primary rounded-circle ms-2" style="width: 45px; height: 45px;"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </form>
                 <div id="chatClosedAlert" class="alert alert-secondary w-100 text-center mb-0 d-none">
-                    <i class="fas fa-lock me-2"></i> Cette réclamation est clôturée. La discussion est en lecture seule.
+                    <i class="fas fa-lock me-2"></i> Cette réclamation est clôturée.
                 </div>
             </div>
         </div>
@@ -170,8 +179,17 @@
                 const messages = JSON.parse(dataElement.textContent);
                 messages.forEach(m => {
                     const div = document.createElement('div');
-                    div.className = `bubble ${m.type === 'user' ? 'bubble-user' : 'bubble-admin'}`;
-                    div.innerHTML = `${m.msg} <span class="bubble-time">${m.time}</span>`;
+                    const isUser = (m.type === 'user');
+                    
+                    // On ajoute une classe spéciale si c'est l'IA
+                    const aiClass = m.isAi ? 'bubble-ai' : '';
+                    
+                    div.className = `bubble ${isUser ? 'bubble-user' : 'bubble-admin'} ${aiClass}`;
+                    div.innerHTML = `
+                        <span class="sender-name">${m.sender}</span>
+                        ${m.msg} 
+                        <span class="bubble-time">${m.time}</span>
+                    `;
                     body.appendChild(div);
                 });
             } catch (e) {
@@ -181,7 +199,6 @@
         
         modal.show();
         
-        // Petit délai pour laisser le temps au DOM de se construire avant le scroll
         setTimeout(() => { 
             body.scrollTop = body.scrollHeight; 
         }, 300);
@@ -195,7 +212,6 @@
             const ticketToClick = document.getElementById('ticket-' + chatIdToOpen);
             if (ticketToClick) {
                 ticketToClick.click();
-                // Nettoyer l'URL sans recharger la page
                 const newUrl = window.location.pathname;
                 window.history.replaceState({}, document.title, newUrl);
             }

@@ -5,6 +5,7 @@ use App\Entity\Reclamation;
 use App\Enum\StatutReclamation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Enum\TypeReclamation; 
 
 class ReclamationRepository extends ServiceEntityRepository
 {
@@ -56,4 +57,19 @@ class ReclamationRepository extends ServiceEntityRepository
             'rejetee'    => $countByStatut(StatutReclamation::REJETEE),
         ];
     }
+
+public function findSimilarByTypeWithResponse(TypeReclamation $type, int $currentId): ?Reclamation
+{
+    return $this->createQueryBuilder('r')
+        ->innerJoin('r.reponseReclamations', 'rep')
+        ->where('r.type = :type') 
+        ->andWhere('r.id_reclamation != :currentId')
+        ->andWhere('rep.message IS NOT NULL')
+        ->setParameter('type', $type->value)
+        ->setParameter('currentId', $currentId)
+        ->orderBy('r.date_creation', 'DESC')
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
+}
 }

@@ -9,6 +9,8 @@ use App\Entity\User;
 use App\Enum\StatutReclamation;
 use App\Form\ReclamationType;
 use App\Repository\ReclamationRepository;
+use App\Service\AiAssistantService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,11 +29,12 @@ class ReclamationUserController extends AbstractController
     public function index(
         ReclamationRepository $reclamationRepository, 
         Request $request, 
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        AiAssistantService $aiService,
+        NotificationService $notificationService
     ): Response {
         $connectedUser = $this->getUser();
         
-        // Sécurité : Rediriger si non connecté
         if (!$connectedUser) {
             return $this->redirectToRoute('app_login');
         }
@@ -42,8 +45,7 @@ class ReclamationUserController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             
-            // On utilise instanceof qui est géré nativement par Symfony/Doctrine
-            // même pour les Proxies.
+            // Attribution de l'auteur de la réclamation
             if ($connectedUser instanceof Society) {
                 $reclamation->setSociety($connectedUser);
                 $reclamation->setUser(null);
@@ -56,13 +58,27 @@ class ReclamationUserController extends AbstractController
             $reclamation->setStatut(StatutReclamation::EN_ATTENTE);
             
             $entityManager->persist($reclamation);
-            $entityManager->flush();
+            $entityManager->flush(); // L'ID est généré ici
+
+            // --- LOGIQUE IA & NOTIFICATION ---
+            // 1. Analyse du contenu
+            $aiService->processNewReclamation($reclamation);
+            
+            // 2. Génération et stockage de la réponse IA en BDD
+            $reply = $notificationService->generateAndStoreAiReply($reclamation, null);
+            
+            // 3. Envoi de l'email de confirmation avec la réponse IA
+            $notificationService->sendStatusUpdateEmail($reclamation, $reply->getMessage());
 
             $this->addFlash('success', 'Votre réclamation a été envoyée.');
-            return $this->redirectToRoute('app_user_reclamation_index');
+
+            // REDIRECTION avec l'ID pour ouvrir le chat automatiquement en JS
+            return $this->redirectToRoute('app_user_reclamation_index', [
+                'open_chat' => $reclamation->getIdReclamation()
+            ]);
         }
 
-        // Filtrage dynamique pour la liste des réclamations
+        // Filtrage des réclamations pour n'afficher que les siennes
         $criteria = ($connectedUser instanceof Society) 
             ? ['society' => $connectedUser] 
             : ['user' => $connectedUser];
@@ -86,35 +102,35 @@ class ReclamationUserController extends AbstractController
     ): Response {
         $connectedUser = $this->getUser();
 
-        // Vérification robuste de la propriété (évite que User A réponde à User B)
+        // Vérification de sécurité : l'utilisateur possède-t-il cette réclamation ?
         $isOwner = ($reclamation->getSociety() === $connectedUser || $reclamation->getUser() === $connectedUser);
         
         if (!$isOwner) {
-            throw $this->createAccessDeniedException("Vous n'êtes pas autorisé à répondre à cette réclamation.");
+            throw $this->createAccessDeniedException("Vous n'êtes pas autorisé à accéder à cette ressource.");
         }
 
-        // Vérification du statut (empêche de répondre à une réclamation fermée)
+        // Empêcher la réponse si déjà résolue ou rejetée
         if (in_array($reclamation->getStatut(), [StatutReclamation::RESOLUE, StatutReclamation::REJETEE])) {
-            $this->addFlash('error', 'Cette réclamation est clôturée.');
+            $this->addFlash('error', 'Cette réclamation est clôturée. Vous ne pouvez plus envoyer de messages.');
             return $this->redirectToRoute('app_user_reclamation_index');
         }
 
         $messageContent = $request->request->get('message');
         $token = $request->request->get('_token');
 
-        // Validation CSRF et contenu
+        // Validation du jeton CSRF
         if (!$this->isCsrfTokenValid('reply' . $reclamation->getIdReclamation(), $token)) {
-            $this->addFlash('error', 'Jeton de sécurité invalide.');
+            $this->addFlash('error', 'Session invalide, veuillez réessayer.');
             return $this->redirectToRoute('app_user_reclamation_index');
         }
 
-      if (!empty(trim($messageContent))) {
+        if (!empty(trim($messageContent))) {
             $reponse = new ReponseReclamation();
             $reponse->setReclamation($reclamation);
             $reponse->setMessage($messageContent);
             $reponse->setDateReponse(new \DateTime());
             
-            // Correction du type d'auteur
+            // Gestion de l'auteur de la réponse
             if ($connectedUser instanceof Society) {
                 $reponse->setSocietyAuteur($connectedUser);
                 $reponse->setAuteur(null);
@@ -127,6 +143,7 @@ class ReclamationUserController extends AbstractController
             $entityManager->flush();
         }
 
+        // On réouvre le chat après avoir posté un message
         return $this->redirectToRoute('app_user_reclamation_index', [
             'open_chat' => $reclamation->getIdReclamation()
         ]);
