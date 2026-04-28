@@ -51,22 +51,36 @@ class NotificationService {
         return $reply;
     }
 
-    public function sendStatusUpdateEmail(Reclamation $reclamation, ?string $aiMessage = null)
-    {
-        if (!$aiMessage) {
-            $aiMessage = "Votre réclamation est en cours de traitement.";
-        }
+        // src/Service/NotificationService.php
 
-        $email = (new TemplatedEmail())
-            ->from('support@khadamni.tn')
-            ->to($reclamation->getUser()->getEmail())
-            ->subject('Mise à jour de votre réclamation - Khadamni')
-            ->htmlTemplate('emails/reclamation_status_update.html.twig')
-            ->context([
-                'reclamation' => $reclamation,
-                'aiMessage' => $aiMessage,
-            ]);
-
-        $this->mailer->send($email);
+public function sendStatusUpdateEmail(Reclamation $reclamation, ?string $aiMessage = null)
+{
+    if (!$aiMessage) {
+        $aiMessage = "Votre réclamation est en cours de traitement.";
     }
+
+    $recipient = $reclamation->getUser() ?? $reclamation->getSociety();
+
+    if (!$recipient) {
+        throw new \Exception("Destinataire introuvable.");
+    }
+
+    // On détermine le nom dynamiquement
+    $displayName = ($recipient instanceof \App\Entity\Society) 
+        ? $recipient->getName() 
+        : $recipient->getNom();
+
+    $email = (new TemplatedEmail())
+        ->from('support@khadamni.tn')
+        ->to($recipient->getEmail())
+        ->subject('Mise à jour de votre réclamation - Khadamni')
+        ->htmlTemplate('emails/reclamation_status_update.html.twig')
+        ->context([
+            'reclamation' => $reclamation,
+            'aiMessage' => $aiMessage,
+            'recipientName' => $displayName, // On passe le nom déjà calculé
+        ]);
+
+    $this->mailer->send($email);
+}
 }

@@ -1,9 +1,10 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
+# config/services.yaml
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Dossier pour les CV (Ton paramètre local)
+    cv_directory: '%kernel.project_dir%/public/uploads/cvs'
+    
+    # Paramètres dynamiques récupérés du fichier .env (Version de ta collègue)
     app.motivational_video_embed_url: '%env(string:MOTIVATIONAL_VIDEO_EMBED_URL)%'
     app.motivational_video_path: '%env(string:MOTIVATIONAL_VIDEO_PATH)%'
     app.openai_api_key: '%env(string:OPENAI_API_KEY)%'
@@ -13,46 +14,25 @@ parameters:
     app.openrouter_model: '%env(string:OPENROUTER_MODEL)%'
     app.gemini_api_key: '%env(string:GEMINI_API_KEY)%'
     app.gemini_model: '%env(string:GEMINI_MODEL)%'
+    
+    # Aliases pour le binding automatique
     gemini_api_key: '%env(GEMINI_API_KEY)%'
     gemini_model: '%env(GEMINI_MODEL)%'
+
 services:
-    # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        
+        # Injection automatique des clés API dans tes services
         bind:
             $geminiApiKey: '%gemini_api_key%'
             $geminiModel: '%gemini_model%'
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
+    # Chargement automatique des classes du dossier src/
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-    # --- AI Providers (CV improvement) ---
-    # We define these here (not in config/packages) to ensure Symfony always loads them.
-    App\Service\OpenAiResponsesClient:
-        arguments:
-            $apiKey: '%app.openai_api_key%'
-            $model: '%app.openai_model%'
-
-    App\Service\OpenRouterChatClient:
-        arguments:
-            $apiKey: '%app.openrouter_api_key%'
-            $model: '%app.openrouter_model%'
-
-    App\Service\GeminiGenerateContentClient:
-        arguments:
-            $apiKey: '%app.gemini_api_key%'
-            $model: '%app.gemini_model%'
-
-    App\Service\LlmClientFactory:
-        arguments:
-            $provider: '%app.ai_provider%'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
