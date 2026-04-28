@@ -53,7 +53,7 @@ class AiAssistantService
     public function processNewReclamation(Reclamation $reclamation): bool
     {
         $texte = strtolower($reclamation->getDescription());
-        $motsClesSimples = ['mot de passe', 'password', 'connexion', 'cv', 'modifier'];
+        $motsClesSimples = ['mot de passe', 'connexion', 'cv', 'compte' ,'societe','offre','emploi','stage'];
 
         foreach ($motsClesSimples as $mot) {
             if (str_contains($texte, $mot)) return true;

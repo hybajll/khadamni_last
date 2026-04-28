@@ -1,221 +1,667 @@
+{# ========================================================== #}
+{# Étend le template principal base.html.twig #}
+{# ========================================================== #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Support Khadamni{% endblock %}
-
+{# Début du bloc body injecté dans base.html.twig #}
 {% block body %}
+
+{# ========================================================== #}
+{# Début CSS interne à la page #}
+{# ========================================================== #}
 <style>
-    body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-    .support-header { background: white; padding: 15px 20px; border-bottom: 1px solid #e4e6eb; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .form-orange-section { background-color: #f9ce97; border: 1px solid #242424 !important; border-radius: 15px; }
-    .ticket-card { background: #efe3c8; border-radius: 12px; border: none; margin-bottom: 12px; transition: all 0.2s ease; border-left: 4px solid #ccd0d5; cursor: pointer; }
-    .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    
-    .status-resolue { border-left-color: #45bd62; }
-    .status-rejetee { border-left-color: #f44336; }
-    .status-attente { border-left-color: #f7b928; }
-    
-    .chat-container { background: #fbdea0; height: 450px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; scroll-behavior: smooth; }
-    .bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 10px; font-size: 0.95rem; line-height: 1.4; position: relative; }
-    .bubble-user { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 4px; }
-    .bubble-admin { align-self: flex-start; background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
-    
-    /* Style spécifique pour l'IA */
-    .bubble-ai { border-left: 4px solid #f1c54b; }
-    
-    .bubble-time { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 5px; text-align: right; }
-    .sender-name { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; display: block; }
-    .btn-create { background: #1877f2; color: white; border-radius: 25px; font-weight: 600; padding: 8px 20px; border: none; }
+
+{# Variables globales CSS #}
+:root{
+
+    /* Couleur de fond principale */
+    --primary-bg:#fdf6ec;
+
+    /* Couleur fond sidebar */
+    --sidebar-bg:#ffffff;
+
+    /* Couleur accent orange */
+    --accent-orange:#ffb100;
+
+    /* Hauteur header */
+    --header-height:80px;
+}
+
+/* Reset général */
+*{
+
+    /* padding + border inclus dans largeur */
+    box-sizing:border-box;
+}
+
+/* html et body */
+html,body{
+
+    /* retire marges navigateur */
+    margin:0;
+
+    /* retire padding navigateur */
+    padding:0;
+
+    /* largeur totale */
+    width:100%;
+
+    /* hauteur minimale */
+    min-height:70%;
+}
+
+/* Body principal */
+body{
+
+    /* fond global */
+    background:var(--primary-bg);
+
+    /* police */
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+
+    /* bloque scroll horizontal */
+    overflow-x:hidden;
+}
+
+/* ========================================================== */
+/* HEADER */
+/* ========================================================== */
+
+.support-header{
+
+    /* largeur responsive */
+    width:95%;
+
+    /* largeur max */
+    max-width:1300px;
+
+    /* centrage + marge haute */
+    margin:10px auto 0 auto;
+
+    /* coins arrondis */
+    border-radius:18px;
+}
+
+/* ========================================================== */
+/* WRAPPER PRINCIPAL */
+/* ========================================================== */
+
+.main-wrapper{
+
+    /* largeur responsive */
+    width:95%;
+
+    /* largeur max */
+    max-width:1600px;
+
+    /* centré */
+    margin:15px auto;
+
+    /* disposition horizontale */
+    display:flex;
+
+    /* espace entre colonnes */
+    gap:20px;
+
+    /* étire verticalement */
+    align-items:stretch;
+
+    /* hauteur écran moins header */
+    min-height:calc(100vh - 130px);
+}
+
+/* ========================================================== */
+/* SIDEBAR GAUCHE */
+/* ========================================================== */
+
+.sidebar-list{
+
+    /* largeur fixe */
+    width:320px;
+
+    /* largeur minimale */
+    min-width:280px;
+
+    /* fond blanc */
+    background:#fff;
+
+    /* coins arrondis */
+    border-radius:20px;
+
+    /* masque débordement */
+    overflow:hidden;
+
+    /* bordure */
+    border:1px solid #eee;
+
+    /* flex vertical */
+    display:flex;
+
+    flex-direction:column;
+}
+
+/* Titre sidebar */
+.sidebar-header{
+
+    /* fond sombre */
+    background:#343a40;
+
+    /* texte blanc */
+    color:#fff;
+
+    /* espace intérieur */
+    padding:18px;
+}
+
+/* Zone scrollable des tickets */
+.ticket-scroll{
+
+    /* prend place restante */
+    flex:1;
+
+    /* scroll vertical */
+    overflow-y:auto;
+
+    /* padding intérieur */
+    padding:12px;
+}
+
+/* ========================================================== */
+/* ITEMS RECLAMATION */
+/* ========================================================== */
+
+.ticket-item{
+
+    /* fond blanc */
+    background:#fff;
+
+    /* bordure légère */
+    border:1px solid #eee;
+
+    /* coins arrondis */
+    border-radius:14px;
+
+    /* espace interne */
+    padding:14px;
+
+    /* marge basse */
+    margin-bottom:12px;
+
+    /* animation douce */
+    transition:0.2s;
+}
+
+/* Au survol */
+.ticket-item:hover{
+
+    /* fond beige clair */
+    background:#fff8e8;
+
+    /* remonte légèrement */
+    transform:translateY(-2px);
+
+    /* curseur main */
+    cursor:pointer;
+}
+
+/* Ticket actif */
+.ticket-item.active{
+
+    /* bordure orange */
+    border:2px solid var(--accent-orange);
+}
+
+/* ========================================================== */
+/* ZONE DROITE */
+/* ========================================================== */
+
+.content-area{
+
+    /* prend tout espace restant */
+    flex:1;
+
+    /* autorise réduction */
+    min-width:0;
+
+    /* fond blanc */
+    background:#fff;
+
+    /* coins arrondis */
+    border-radius:22px;
+
+    /* bordure */
+    border:1px solid #eee;
+
+    /* cache débordement */
+    overflow:hidden;
+
+    /* flex vertical */
+    display:flex;
+
+    flex-direction:column;
+}
+
+/* ========================================================== */
+/* FORMULAIRE */
+/* ========================================================== */
+
+.create-view{
+
+    /* padding intérieur */
+    padding:20px;
+
+    /* scroll si besoin */
+    overflow-y:auto;
+
+    /* prend hauteur restante */
+    flex:1;
+}
+
+/* Boite formulaire */
+.form-box{
+
+    /* largeur totale */
+    width:100%;
+
+    /* largeur max */
+    max-width:500px;
+
+    /* centrage */
+    margin:auto;
+
+    /* fond crème */
+    background:#fffaf3;
+
+    /* bordure orange clair */
+    border:1px solid #ffe2a6;
+
+    /* coins arrondis */
+    border-radius:22px;
+
+    /* padding */
+    padding:30px;
+}
+
+/* ========================================================== */
+/* CHAT */
+/* ========================================================== */
+
+.chat-view{
+
+    /* caché au départ */
+    display:none;
+
+    /* vertical */
+    flex-direction:column;
+
+    /* pleine hauteur */
+    height:80%;
+
+    min-height:80%;
+}
+
+/* Header chat */
+.chat-header{
+
+    /* dégradé orange */
+    background:linear-gradient(135deg,#ffb100,#ffc933);
+
+    /* texte blanc */
+    color:#fff;
+
+    /* padding */
+    padding:18px 22px;
+
+    /* horizontal */
+    display:flex;
+
+    /* espace entre éléments */
+    justify-content:space-between;
+
+    /* alignement vertical */
+    align-items:center;
+
+    /* petit gap */
+    gap:10px;
+}
+
+/* Zone messages */
+.chat-messages{
+
+    /* prend place restante */
+    flex:1;
+
+    /* scroll vertical */
+    overflow-y:auto;
+
+    /* padding */
+    padding:22px;
+
+    /* flex vertical */
+    display:flex;
+
+    flex-direction:column;
+
+    /* espace entre bulles */
+    gap:14px;
+
+    /* fond léger */
+    background:#fffdf9;
+}
+
+/* ========================================================== */
+/* BULLES CHAT */
+/* ========================================================== */
+
+.bubble{
+
+    /* largeur max */
+    max-width:75%;
+
+    /* padding */
+    padding:14px 16px;
+
+    /* arrondi */
+    border-radius:18px;
+
+    /* taille texte */
+    font-size:15px;
+
+    /* hauteur ligne */
+    line-height:1.5;
+
+    /* casse longs mots */
+    word-break:break-word;
+}
+
+/* Message utilisateur */
+.bubble-user{
+
+    /* à droite */
+    align-self:flex-end;
+
+    /* fond sombre */
+    background:#343a40;
+
+    /* texte blanc */
+    color:#fff;
+
+    /* coin spécifique */
+    border-bottom-right-radius:5px;
+}
+
+/* Message admin */
+.bubble-admin{
+
+    /* à gauche */
+    align-self:flex-start;
+
+    /* fond blanc */
+    background:#ffffff;
+
+    /* bordure */
+    border:1px solid #eee;
+
+    /* texte noir */
+    color:#222;
+
+    /* coin spécifique */
+    border-bottom-left-radius:5px;
+}
+
+/* Petit texte heure / auteur */
+.bubble small{
+
+    /* petite taille */
+    font-size:11px;
+
+    /* transparence */
+    opacity:0.7;
+}
+
+/* Footer chat */
+.chat-footer{
+
+    /* fond blanc */
+    background:#fff;
+
+    /* bordure haute */
+    border-top:1px solid #eee;
+
+    /* padding */
+    padding:15px;
+}
+
+/* ========================================================== */
+/* RESPONSIVE TABLETTE */
+/* ========================================================== */
+
+@media(max-width:1100px){
+
+    .main-wrapper{
+
+        /* empile verticalement */
+        flex-direction:column;
+
+        /* hauteur auto */
+        min-height:auto;
+    }
+
+    .sidebar-list,
+    .content-area{
+
+        /* pleine largeur */
+        width:100%;
+
+        min-width:100%;
+    }
+
+    .sidebar-list{
+
+        /* hauteur fixe */
+        height:300px;
+    }
+}
+
+/* ========================================================== */
+/* RESPONSIVE MOBILE */
+/* ========================================================== */
+
+@media(max-width:768px){
+
+    .support-header,
+    .main-wrapper{
+
+        /* pleine largeur */
+        width:100%;
+
+        /* supprime marges */
+        margin:0;
+
+        /* coins carrés */
+        border-radius:0;
+    }
+
+    .support-header{
+
+        /* padding mobile */
+        padding:15px !important;
+    }
+
+    .main-wrapper{
+
+        /* espace interne */
+        padding:15px;
+
+        /* gap réduit */
+        gap:15px;
+    }
+
+    .create-view{
+
+        /* padding réduit */
+        padding:18px;
+    }
+
+    .form-box{
+
+        /* padding réduit */
+        padding:20px;
+    }
+
+    .chat-header{
+
+        /* vertical */
+        flex-direction:column;
+
+        /* aligne gauche */
+        align-items:flex-start;
+    }
+
+    .bubble{
+
+        /* largeur complète */
+        max-width:100%;
+    }
+
+    .chat-footer form{
+
+        /* vertical */
+        flex-direction:column;
+    }
+
+    .chat-footer button{
+
+        /* largeur totale */
+        width:100% !important;
+
+        /* arrondi */
+        border-radius:14px !important;
+    }
+}
+
 </style>
 
-<div class="support-header d-flex justify-content-between align-items-center">
-    <div>
-        <h5 class="fw-bold mb-0 text-dark">Centre d'assistance</h5>
-        <small class="text-muted">Gérez vos réclamations</small>
-    </div>
-    <button class="btn btn-create shadow-sm" data-bs-toggle="collapse" data-bs-target="#newTicketForm">
+{# Fin du bloc body #}
+
+
+<div class="support-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold m-0"><i class="fas fa-headset me-2 text-warning"></i>Khadamni Support</h5>
+    <button class="btn btn-warning text-white fw-bold rounded-pill" onclick="showCreateForm()">
         <i class="fas fa-plus me-2"></i>Nouvelle Réclamation
     </button>
 </div>
 
-<div class="container mt-4">
-    {# Messages flash #}
-    {% for message in app.flashes('success') %}
-        <div class="alert alert-success alert-dismissible fade show rounded-pill px-4">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div class="main-wrapper">
+    <div class="sidebar-list shadow-sm">
+        <div class="sidebar-header">
+            <h6 class="m-0 fw-bold">Anciennes réclamations</h6>
         </div>
-    {% endfor %}
+        <div class="ticket-scroll">
+            {% for rec in reclamations %}
+                <div class="ticket-item shadow-sm" id="ticket-{{ rec.idReclamation }}" 
+                     onclick="loadChat('{{ rec.idReclamation }}', '{{ rec.sujet|escape('js') }}')">
+                    <div class="small text-muted mb-1">{{ rec.dateCreation|date('d/m/Y') }}</div>
+                    <div class="fw-bold text-dark">{{ rec.sujet }}</div>
+                    <span class="badge bg-light text-dark border mt-2">{{ rec.statut.value }}</span>
+                </div>
 
-    <div class="collapse mb-5" id="newTicketForm">
-        <div class="card card-body form-orange-section shadow-sm p-4">
-            <h6 class="fw-bold mb-3" style="color: #854d0e;"><i class="fas fa-pen me-2"></i>Décrivez votre problème</h6>
-            {{ form_start(form) }}
-                <div class="mb-3">
-                    {{ form_label(form.sujet, 'Sujet', {'label_attr': {'class': 'small fw-bold'}}) }}
-                    {{ form_widget(form.sujet, {'attr': {'class': 'form-control rounded-pill border-0 shadow-sm', 'placeholder': 'Titre de la réclamation'}}) }}
-                </div>
-                <div class="mb-3">
-                    {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'small fw-bold'}}) }}
-                    {{ form_widget(form.description, {'attr': {'class': 'form-control rounded-3 border-0 shadow-sm', 'placeholder': 'Détails...', 'rows': '4'}}) }}
-                </div>
-                <div class="row align-items-end">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        {{ form_label(form.type, 'Type de réclamation', {'label_attr': {'class': 'small fw-bold'}}) }}
-                        {{ form_widget(form.type, {'attr': {'class': 'form-select rounded-pill border-0 shadow-sm'}}) }}
-                    </div>
-                    <div class="col-md-6 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-warning text-white rounded-pill px-5 fw-bold shadow-sm" style="background-color: #f6ad55; border:none;">
-                            Envoyer la réclamation
-                        </button>
-                    </div>
-                </div>
-            {{ form_end(form) }}
+                <script type="application/json" id="data-{{ rec.idReclamation }}">
+                    [
+                        {"type": "user", "msg": "{{ rec.description|escape('js') }}", "time": "{{ rec.dateCreation|date('H:i') }}"}
+                        {% for rep in rec.reponseReclamations %}
+                        ,{"type": "{{ rep.auteur is null ? 'ai' : 'admin' }}", "msg": "{{ rep.message|escape('js') }}", "time": "{{ rep.dateReponse|date('H:i') }}"}
+                        {% endfor %}
+                    ]
+                </script>
+            {% endfor %}
         </div>
     </div>
 
-    <div class="d-flex align-items-center mb-3 pt-3 border-top">
-        <h3 class="text-muted small fw-bold mb-0 text-uppercase">Vos Réclamations Passées</h3>
-    </div>
-    
-    {% for rec in reclamations %}
-        {% set status_val = rec.statut.value|default(rec.statut) %}
-        {% set is_closed = (status_val == 'RESOLUE' or status_val == 'REJETEE') %}
+    <div class="content-area shadow-sm">
         
-        <div class="ticket-card shadow-sm {{ is_closed ? (status_val == 'RESOLUE' ? 'status-resolue' : 'status-rejetee') : 'status-attente' }}" 
-             id="ticket-{{ rec.idReclamation }}"
-             onclick="openChatModal('{{ rec.idReclamation }}', '{{ rec.sujet|escape('js') }}', '{{ csrf_token('reply' ~ rec.idReclamation) }}', '{{ path('app_user_reclamation_reply', {'id': rec.idReclamation}) }}', {{ is_closed ? 'true' : 'false' }})">
-            
-            <div class="card-body d-flex justify-content-between align-items-center p-3">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-light p-3 me-3 text-primary"><i class="fas fa-envelope-open-text"></i></div>
-                    <div>
-                        <h6 class="mb-1 fw-bold">{{ rec.sujet }}</h6>
-                        <span class="badge {{ status_val == 'RESOLUE' ? 'bg-success' : (status_val == 'REJETEE' ? 'bg-danger' : 'bg-warning text-dark') }} rounded-pill" style="font-size: 0.7rem;">{{ status_val }}</span>
+        <div id="view-create" class="create-view">
+            <div class="form-box shadow-sm">
+                <h4 class="fw-bold mb-4" style="color: #c05621;">Soumettre une réclamation</h4>
+                {{ form_start(form) }}
+                    <div class="mb-3">
+                        <label class="fw-bold small">Sujet</label>
+                        {{ form_widget(form.sujet, {'attr': {'class': 'form-control border-dark', 'placeholder': 'Ex: Problème de mot de passe'}}) }}
                     </div>
-                </div>
-                <i class="fas fa-chevron-right text-muted"></i>
+                    <div class="mb-3">
+                        <label class="fw-bold small">Description</label>
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control border-dark', 'rows': '5'}}) }}
+                    </div>
+                    <div class="mb-4">
+                        <label class="fw-bold small">Catégorie</label>
+                        {{ form_widget(form.type, {'attr': {'class': 'form-select border-dark'}}) }}
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-dark px-5 py-2 fw-bold">Envoyer</button>
+                    </div>
+                {{ form_end(form) }}
             </div>
-            
-            {# Injection des données JSON pour le JS #}
-            <script type="application/json" id="data-{{ rec.idReclamation }}">
-                [
-                    {
-                        "type": "user", 
-                        "sender": "VOUS",
-                        "msg": "{{ rec.description|escape('js') }}", 
-                        "time": "{{ rec.dateCreation|date('H:i') }}"
-                    }
-                    {% for rep in rec.reponseReclamations %}
-                    ,{
-                        "type": "{{ rep.auteur is null or rep.isAuteurAdmin ? 'admin' : 'user' }}", 
-                        "isAi": {{ rep.auteur is null ? 'true' : 'false' }},
-                        "sender": "{{ rep.auteur is null ? 'ASSISTANT IA' : (rep.isAuteurAdmin ? 'SUPPORT ADMIN' : 'VOUS') }}",
-                        "msg": "{{ rep.message|escape('js') }}", 
-                        "time": "{{ rep.dateReponse|date('H:i') }}"
-                    }
-                    {% endfor %}
-                ]
-            </script>
         </div>
-    {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-            <p class="text-muted">Vous n'avez pas encore de réclamation.</p>
-        </div>
-    {% endfor %}
-</div>
 
-{# MODALE DE CHAT #}
-<div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div class="modal-header bg-white border-bottom">
-                <h6 class="modal-title fw-bold" id="chatTitle">Détails</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div id="view-chat" class="chat-view">
+            <div class="chat-header">
+                <h6 class="m-0 fw-bold" id="active-chat-title">Chat #ID - Sujet</h6>
+                <button class="btn btn-sm btn-outline-light" onclick="showCreateForm()">Retour</button>
             </div>
-            <div class="modal-body p-0">
-                <div id="chatBody" class="chat-container"></div>
-            </div>
-            <div class="modal-footer bg-white p-3 border-top">
-                <form id="chatForm" method="POST" class="w-100 d-flex align-items-center">
-                    <input type="hidden" name="_token" id="chatToken">
-                    <div class="input-group">
-                        <input type="text" name="message" id="messageInput" class="form-control border-2 bg-light rounded-pill ps-4" placeholder="Écrire une réponse..." required autocomplete="off">
-                        <button type="submit" class="btn btn-primary rounded-circle ms-2" style="width: 45px; height: 45px;"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </form>
-                <div id="chatClosedAlert" class="alert alert-secondary w-100 text-center mb-0 d-none">
-                    <i class="fas fa-lock me-2"></i> Cette réclamation est clôturée.
+            <div class="chat-messages" id="chat-box">
                 </div>
+            <div class="chat-footer p-3 bg-white border-top">
+                <form id="reply-form" method="POST" class="d-flex gap-2">
+                    <input type="text" name="message" class="form-control rounded-pill" placeholder="Votre message...">
+                    <button class="btn btn-warning rounded-circle" style="width: 45px;"><i class="fas fa-paper-plane"></i></button>
+                </form>
             </div>
         </div>
+
     </div>
 </div>
 
 <script>
-    function openChatModal(id, sujet, token, actionUrl, isClosed) {
-        const modalElement = document.getElementById('chatModal');
-        const modal = new bootstrap.Modal(modalElement);
-        const body = document.getElementById('chatBody');
-        const form = document.getElementById('chatForm');
-        const alertClosed = document.getElementById('chatClosedAlert');
-        
-        document.getElementById('chatTitle').innerText = sujet;
-        document.getElementById('chatToken').value = token;
-        form.action = actionUrl;
-        body.innerHTML = '';
-
-        if (isClosed) {
-            form.classList.add('d-none');
-            alertClosed.classList.remove('d-none');
-        } else {
-            form.classList.remove('d-none');
-            alertClosed.classList.add('d-none');
-        }
-
-        const dataElement = document.getElementById('data-' + id);
-        if (dataElement) {
-            try {
-                const messages = JSON.parse(dataElement.textContent);
-                messages.forEach(m => {
-                    const div = document.createElement('div');
-                    const isUser = (m.type === 'user');
-                    
-                    // On ajoute une classe spéciale si c'est l'IA
-                    const aiClass = m.isAi ? 'bubble-ai' : '';
-                    
-                    div.className = `bubble ${isUser ? 'bubble-user' : 'bubble-admin'} ${aiClass}`;
-                    div.innerHTML = `
-                        <span class="sender-name">${m.sender}</span>
-                        ${m.msg} 
-                        <span class="bubble-time">${m.time}</span>
-                    `;
-                    body.appendChild(div);
-                });
-            } catch (e) {
-                console.error("Erreur lors de la lecture des messages", e);
-            }
-        }
-        
-        modal.show();
-        
-        setTimeout(() => { 
-            body.scrollTop = body.scrollHeight; 
-        }, 300);
+    function showCreateForm() {
+        document.getElementById('view-create').style.display = 'block';
+        document.getElementById('view-chat').style.display = 'none';
+        document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
     }
 
+    function loadChat(id, sujet) {
+        // Switch de vue
+        document.getElementById('view-create').style.display = 'none';
+        const chatView = document.getElementById('view-chat');
+        chatView.style.display = 'flex';
+
+        // Update Header
+        document.getElementById('active-chat-title').innerText = "Chat #" + id + " - " + sujet;
+        
+        // Update Active Style
+        document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('ticket-' + id).classList.add('active');
+
+        // Load Messages
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = '';
+        const data = JSON.parse(document.getElementById('data-' + id).textContent);
+
+        data.forEach(m => {
+            const div = document.createElement('div');
+            const isUser = (m.type === 'user');
+            div.className = `bubble ${isUser ? 'bubble-user' : 'bubble-admin'}`;
+            div.innerHTML = `<small class="d-block fw-bold mb-1">${isUser ? 'Client' : 'Assistant Khadamni'}</small>${m.msg}`;
+            chatBox.appendChild(div);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Gestion automatique de l'ouverture après envoi
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const chatIdToOpen = urlParams.get('open_chat');
-
-        if (chatIdToOpen) {
-            const ticketToClick = document.getElementById('ticket-' + chatIdToOpen);
-            if (ticketToClick) {
-                ticketToClick.click();
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
-            }
-        }
+        const openId = urlParams.get('open_chat');
+        if (openId) { loadChat(openId, "Votre réclamation"); }
     });
 </script>
 {% endblock %}

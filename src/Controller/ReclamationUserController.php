@@ -44,8 +44,7 @@ class ReclamationUserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            // Attribution de l'auteur de la réclamation
+
             if ($connectedUser instanceof Society) {
                 $reclamation->setSociety($connectedUser);
                 $reclamation->setUser(null);
