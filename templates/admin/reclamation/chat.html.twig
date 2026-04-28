@@ -1,0 +1,164 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Support Khadamni - Chat #{{ reclamation.idReclamation }}{% endblock %}
+
+{% block body %}
+<style>
+    body { background-color: #b2bdce; }
+
+    .chat-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 85vh;
+        padding: 20px;
+    }
+
+    .chat-card {
+        width: 70%;
+        max-width: 500px;
+        background-color: #f1c54b; 
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        overflow: hidden;
+        border: 4px solid #f1c54b;
+    }
+
+    /* BARRE DU HAUT : Contient le Nom ET le Sujet */
+    .chat-header-custom {
+        background: #212529; 
+        color: #f1c54b;
+        padding: 15px 25px;
+    }
+
+    .subject-banner {
+        font-size: 0.85rem;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: 5px;
+        border: 1px solid rgba(241, 197, 75, 0.3);
+    }
+
+    .chat-box { 
+        height: 350px; 
+        overflow-y: auto; 
+        background-color: #ffffff; 
+        padding: 15px; 
+        display: flex;
+        flex-direction: column;
+        scroll-behavior: smooth;
+    }
+
+    /* Zone de description initiale (plus de sujet ici) */
+    .initial-description {
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        border-radius: 0 8px 8px 0;
+        font-style: italic;
+        font-size: 0.7rem;
+        color: #495057;
+    }
+
+    .message-wrapper { margin-bottom: 20px; display: flex; flex-direction: column; }
+    
+    .bubble { 
+        max-width: 85%; 
+        padding: 14px 18px; 
+        border-radius: 18px; 
+        font-size: 10px; 
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+    
+    .msg-admin { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 4px; }
+    .msg-client { align-self: flex-start; background-color: #f1f3f5; color: #212529; border-bottom-left-radius: 4px; }
+    
+    .sender-label { font-weight: 800; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
+    .admin-label { text-align: right; color: #0d6efd; }
+    .client-label { color: #6c757d; }
+
+    .msg-date { font-size: 10px; color: #adb5bd; margin-top: 4px; }
+    .admin-date { align-self: flex-end; }
+
+    .chat-footer { background: #f8f9fa; padding: 15px 25px; border-top: 2px solid #f1c54b; }
+</style>
+
+<div class="chat-wrapper">
+    <div class="chat-card">
+        
+        {# --- HEADER AVEC SUJET INTÉGRÉ --- #}
+        <div class="chat-header-custom">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center">
+                    <i class="fas {{ reclamation.society ? 'fa-building' : 'fa-user-circle' }} fa-2x me-3"></i>
+                    <div>
+                        <h5 class="mb-0 fw-bold">
+                            {{ reclamation.society ? reclamation.society.name : (reclamation.user.nom ~ ' ' ~ reclamation.user.prenom) }}
+                        </h5>
+                        {# LE SUJET EST ICI MAINTENANT #}
+                        <div class="subject-banner">
+                            <i class="fas fa-tag me-1 text-warning"></i> <strong>Sujet :</strong> {{ reclamation.sujet }}
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ path('app_admin_reclamations_index') }}" class="btn btn-outline-warning btn-sm fw-bold border-2">
+                    <i class="fas fa-arrow-left"></i> RETOUR
+                </a>
+            </div>
+        </div>
+
+        <div class="chat-box" id="chatContainer">
+            
+            {# Description initiale rappelée discrètement au début du chat #}
+            <div class="initial-description">
+                <strong>Message d'ouverture :</strong><br>
+                "{{ reclamation.description }}"
+                <div class="text-end mt-1">
+                    <small class="text-muted">Reçu le {{ reclamation.dateCreation|date('d/m/Y à H:i') }}</small>
+                </div>
+            </div>
+
+            {# --- BOUCLE DES MESSAGES --- #}
+            {% for msg in messages %}
+                {% set isAdmin = msg.isAuteurAdmin %}
+                <div class="message-wrapper">
+                    <span class="sender-label {{ isAdmin ? 'admin-label' : 'client-label' }}">
+                        {{ isAdmin ? 'SUPPORT KHADAMNI' : (reclamation.society ? reclamation.society.name : reclamation.user.prenom) }}
+                    </span>
+                    <div class="bubble {{ isAdmin ? 'msg-admin' : 'msg-client' }}">
+                        {{ msg.message }}
+                    </div>
+                    <span class="msg-date {{ isAdmin ? 'admin-date' : '' }}">
+                        {{ msg.dateReponse|date('H:i') }}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="chat-footer">
+            <form method="post" class="d-flex align-items-center gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin_reply' ~ reclamation.idReclamation) }}">
+                <div class="input-group">
+                    <input type="text" name="message" class="form-control border-2 rounded-pill px-4" 
+                           placeholder="Écrivez votre réponse..." required autocomplete="off">
+                    <button type="submit" class="btn btn-primary rounded-circle ms-2 shadow" style="width: 45px; height: 45px;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function scrollToBottom() {
+        const container = document.getElementById('chatContainer');
+        if(container) container.scrollTop = container.scrollHeight;
+    }
+    window.onload = scrollToBottom;
+</script>
+{% endblock %}

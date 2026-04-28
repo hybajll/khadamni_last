@@ -1,0 +1,160 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Réclamations{% endblock %}
+
+{% block body %}
+
+  <style>
+    /* Style de base des liens d'onglets */
+    .nav-tabs .nav-link { 
+        color: #495057; 
+        font-weight: bold; 
+        border: none; 
+        padding: 10px 25px;
+        transition: all 0.3s ease;
+        border-radius: 5px 5px 0 0;
+        margin-right: 5px;
+    }
+
+    /* État ACTIF : Bleu avec bordure orange en bas */
+    .nav-tabs .nav-link.active { 
+        background-color: #0d6efd !important; /* Ton bleu */
+        color: #ffffff !important;           /* Texte blanc pour la lisibilité */
+        border-bottom: 3px solid #f39c12 !important; 
+    }
+
+    /* État INACTIF : Orange/Rouge par défaut (quand non sélectionné) */
+    .nav-tabs .nav-link:not(.active) { 
+        background-color: #fd510d;           /* Ton orange/rouge */
+        color: #ffffff;                      /* Texte blanc */
+        border-bottom: 3px solid #f39c12;
+        opacity: 0.8;                        /* Légèrement plus sombre pour différencier */
+    }
+
+    /* Effet au survol sur l'onglet inactif */
+    .nav-tabs .nav-link:hover:not(.active) {
+        opacity: 1;
+        color: #fff;
+        background-color: #e4450a;
+    }
+
+    /* On retire la bordure par défaut de Bootstrap sur le container des tabs */
+    .nav-tabs {
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
+<div class="container-fluid p-0">
+    {# Header #}
+    <div class="d-flex align-items-center justify-content-between px-3 py-2 bg-dark text-white shadow-sm">
+        <h6 class="mb-0 fw-bold"><i class="fas fa-list-alt me-2 text-warning"></i>Dashboard Réclamations</h6>
+        <a href="{{ path('app_reclamation_new') }}" class="btn btn-success btn-sm fw-bold">
+            <i class="fas fa-plus"></i> Nouvelle réclamation
+        </a>
+    </div>
+
+    <div class="px-3 mt-3">
+        {# Navigation des onglets #}
+        <ul class="nav nav-tabs" id="reclamationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="societe-tab" data-bs-toggle="tab" data-bs-target="#societe-content" type="button" role="tab">
+                    <i class="fas fa-building me-2"></i>Sociétés
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-content" type="button" role="tab">
+                    <i class="fas fa-user me-2"></i>Utilisateurs
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content bg-white shadow-sm border border-top-0" id="reclamationTabsContent">
+            
+            {# Onglet Sociétés #}
+            <div class="tab-pane fade show active" id="societe-content" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="ps-3">ID</th>
+                                <th>Société</th>
+                                <th>Sujet</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set hasSociety = false %}
+                            {% for rec in reclamations %}
+                                {% if rec.society is not null %}
+                                    {% set hasSociety = true %}
+                                    {% include 'admin/reclamation/_row_table.html.twig' with {'type': 'society'} %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if not hasSociety %}
+                                <tr><td colspan="6" class="text-center py-4 text-muted italic">Aucune réclamation de société trouvée.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# Onglet Utilisateurs #}
+            <div class="tab-pane fade" id="user-content" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="ps-3">ID</th>
+                                <th>Utilisateur</th>
+                                <th>Sujet</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set hasUser = false %}
+                            {% for rec in reclamations %}
+                                {% if rec.user is not null %}
+                                    {% set hasUser = true %}
+                                    {% include 'admin/reclamation/_row_table.html.twig' with {'type': 'user'} %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if not hasUser %}
+                                <tr><td colspan="6" class="text-center py-4 text-muted italic">Aucune réclamation d'utilisateur trouvée.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Pagination #}
+<div class="d-flex justify-content-center mt-4 pb-4">
+    <nav>
+        <ul class="pagination pagination-sm shadow-sm">
+            <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                <a class="page-link" href="{{ path('app_admin_reclamation_index', {page: currentPage - 1}) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% if totalPages > 0 %}
+                {% for i in 1..totalPages %}
+                    <li class="page-item {{ i == currentPage ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('app_admin_reclamation_index', {page: i}) }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+            {% endif %}
+            <li class="page-item {{ currentPage == totalPages or totalPages == 0 ? 'disabled' : '' }}">
+                <a class="page-link" href="{{ path('app_admin_reclamation_index', {page: currentPage + 1}) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endblock %}

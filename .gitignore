@@ -18,3 +18,11 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+<<<<<<< HEAD
+=======
+
+# Local scratch files
+/tmp_*.php
+/tmp_*.txt
+/templates/base.legacy.html.twig
+>>>>>>> origin/main

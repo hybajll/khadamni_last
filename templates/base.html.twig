@@ -2,119 +2,287 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Khadamni - Recrutement Intelligent{% endblock %}</title>
-        
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-        
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-        
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>{% block title %}Khadamni{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>●</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
         <style>
             :root {
-                --primary-blue: #003366;
-                --accent-orange: #FF8C00;
-                --bg-light: #f8f9fa;
+                --kh-orange: #ff8c00;
+                --kh-navy: #0a2340;
+                --kh-cream: #fff8ed;
+                --kh-text: #0f172a;
+            }
+
+            html, body {
+                min-height: 100%;
+                background: var(--kh-cream) !important;
             }
 
             body {
+                color: var(--kh-text);
                 font-family: 'Poppins', sans-serif;
-                background-color: var(--bg-light);
-                color: #333;
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
             }
 
-            /* Navigation */
+            .bg-cream {
+                background: var(--kh-cream) !important;
+            }
+
+            .text-darken {
+                color: var(--kh-text);
+            }
+
+            .text-orange {
+                color: var(--kh-orange) !important;
+            }
+
             .navbar {
-                background-color: var(--primary-blue);
-                border-bottom: 4px solid var(--accent-orange);
-                padding: 1rem 0;
+                background: linear-gradient(135deg, var(--kh-navy) 0%, #102f52 100%) !important;
             }
 
             .navbar-brand {
-                font-weight: 700;
-                letter-spacing: 2px;
-                text-transform: uppercase;
-                font-size: 1.5rem;
+                font-weight: 800;
+                letter-spacing: 0.02em;
             }
 
-            .btn-home {
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.4);
-                border-radius: 8px;
-                padding: 6px 15px;
-                transition: all 0.3s;
-                text-decoration: none;
-                font-weight: 500;
+            .nav-link {
+                color: rgba(255, 255, 255, 0.9) !important;
+            }
+
+            .nav-link:hover {
+                color: var(--kh-orange) !important;
+            }
+
+            .card {
+                border: none;
+                border-radius: 1rem;
+                box-shadow: 0 1rem 2rem rgba(15, 47, 70, 0.10);
+            }
+
+            .btn-primary {
+                background-color: var(--kh-orange);
+                border-color: var(--kh-orange);
+            }
+
+            .btn-primary:hover {
+                background-color: #e57a00;
+                border-color: #e57a00;
+            }
+
+            .btn-outline-primary {
+                color: var(--kh-orange);
+                border-color: var(--kh-orange);
+            }
+
+            .btn-outline-primary:hover {
+                background-color: var(--kh-orange);
+                border-color: var(--kh-orange);
+            }
+
+            .hero-auth {
+                min-height: calc(100vh - 90px);
+            }
+
+            .logo-khadamni {
                 display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                font-family: 'Cairo', sans-serif;
+                line-height: 1;
+            }
+
+            .logo-khadamni .logo-text {
+                font-size: 1.35rem;
+                font-weight: 800;
+                color: var(--kh-orange);
+            }
+
+            .logo-khadamni small {
+                font-size: 0.85rem;
+                color: rgba(255, 255, 255, 0.85);
+                margin-top: 0.15rem;
+            }
+
+            .nav-avatar {
+                width: 34px;
+                height: 34px;
+                border-radius: 999px;
+                object-fit: cover;
+                border: 2px solid rgba(255, 255, 255, 0.35);
+            }
+
+            .nav-avatar-fallback {
+                width: 34px;
+                height: 34px;
+                border-radius: 999px;
+                display: inline-flex;
                 align-items: center;
-                gap: 8px;
+                justify-content: center;
+                font-weight: 800;
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.18);
+                border: 2px solid rgba(255, 255, 255, 0.25);
+                font-family: 'Poppins', sans-serif;
             }
 
-            .btn-home:hover {
-                background-color: rgba(255, 255, 255, 0.1);
-                border-color: var(--accent-orange);
-                color: var(--accent-orange);
+            main {
+                background: var(--kh-cream);
             }
 
-            .main-content {
-                flex: 1;
-                padding: 40px 0;
+            .sub-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.14);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                color: rgba(255, 255, 255, 0.92);
+                font-size: 0.85rem;
+                font-weight: 600;
             }
-
-            footer {
-                background-color: #ffffff;
-                padding: 25px 0;
-                border-top: 1px solid #dee2e6;
-                color: #6c757d;
-                font-size: 0.9rem;
+            .sub-badge .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #22c55e;
+                box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+            }
+            .sub-badge .dot.off {
+                background: #f59e0b;
+                box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
             }
         </style>
 
         {% block stylesheets %}{% endblock %}
     </head>
     <body>
-        <nav class="navbar navbar-dark shadow-sm">
-            <div class="container d-flex justify-content-between align-items-center">
-                <a class="navbar-brand" href="{{ path('app_candidature_new') }}">
-                    <span style="color: var(--accent-orange)">KHADA</span>MNI
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+            <div class="container">
+                {# Lien Logo Dynamique #}
+                <a class="navbar-brand" href="{% if app.user %}{% if 'ROLE_SOCIETY' in app.user.roles %}{{ path('society_home') }}{% elseif app.user.type == 'admin' %}{{ path('app_admin_dashboard') }}{% else %}{{ path('app_user_home') }}{% endif %}{% else %}{{ path('app_home') }}{% endif %}">
+                    <div class="logo-khadamni">
+                        <span class="logo-text">خدمني</span>
+                        <small>خدمتك معانا مضمونة</small>
+                    </div>
                 </a>
-                
-                <a href="{{ path('app_candidature_new') }}" class="btn-home">
-                    <i class="bi bi-house-door"></i>
-                    ACCUEIL
-                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarMain">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        {% if app.user %}
+                            {% set isSociety = 'ROLE_SOCIETY' in app.user.roles %}
+                            {# MENU ENTREPRISE #}
+                            {% if isSociety %}
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_home') }}">Accueil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_offers_feed') }}">Offres</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_offer_new') }}">Publier</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_profile') }}">Profil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('society_subscription') }}">Abonnement</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_reclamation_index') }}">Reclamation</a></li>
+                                <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
+                                    {% set remaining = 1 - (app.user.freeUsageCount ?? 0) %}
+                                    <a class="text-decoration-none" href="{{ path('society_subscription') }}">
+                                        <span class="sub-badge">
+                                            {% if app.user.subscriptionEndDate and app.user.subscriptionEndDate > date() %}
+                                                <span class="dot"></span>Abonné
+                                            {% else %}
+                                                <span class="dot off"></span>Free: {{ remaining > 0 ? remaining : 0 }}/1
+                                            {% endif %}
+                                        </span>
+                                    </a>
+                                </li>
+                            
+                            {# MENU ADMIN #}
+                            {% elseif app.user.type == 'admin' %}
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_dashboard') }}">Admin Dashboard</a></li>
+                            
+                            {# MENU CANDIDAT #}
+                            {% else %}
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_home') }}">Accueil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_profile') }}">Profil</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_cv_manage') }}">CV</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_reclamation_index') }}">Réclamations</a></li>
+                                <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
+                                    {% set remaining = 2 - (app.user.freeUsageCount ?? 0) %}
+                                    <a class="text-decoration-none" href="{{ path('app_subscription') }}">
+                                        <span class="sub-badge">
+                                            {% if app.user.subscriptionEndDate and app.user.subscriptionEndDate > date() %}
+                                                <span class="dot"></span>Abonné
+                                            {% else %}
+                                                <span class="dot off"></span>Free: {{ remaining > 0 ? remaining : 0 }}/2
+                                            {% endif %}
+                                        </span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li class="nav-item"><a class="nav-link" href="{{ path(isSociety ? 'society_logout' : 'app_logout') }}">Déconnexion</a></li>
+                            <li class="nav-item ms-lg-2 d-flex align-items-center">
+                                <a class="nav-link py-1" href="{{ path(isSociety ? 'society_profile' : 'app_profile') }}" title="Mon profil">
+                                    {% if not isSociety and app.user.avatarPath %}
+                                        <img src="{{ asset(app.user.avatarPath) }}" alt="Avatar" class="nav-avatar">
+                                    {% else %}
+                                        {% set displayName = isSociety ? (app.user.name ?: app.user.email) : (app.user.prenom ?: app.user.email) %}
+                                        <span class="nav-avatar-fallback">{{ displayName|first|upper }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% else %}
+                            {# MENU NON CONNECTÉ #}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="loginDrop" data-bs-toggle="dropdown">Connexion</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ path('app_login') }}">Candidat</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('society_login') }}">Entreprise</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="regDrop" data-bs-toggle="dropdown">Inscription</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ path('app_register') }}">Candidat</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('society_register') }}">Entreprise</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </nav>
 
-        <main class="main-content">
-            <div class="container">
-                {# Flash Messages #}
+        <main class="py-5">
+            {% block main_container_open %}<div class="container">{% endblock %}
                 {% for label, messages in app.flashes %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ label == 'danger' ? 'danger' : 'success' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
-                            <i class="bi {{ label == 'danger' ? 'bi-exclamation-triangle' : 'bi-check-circle' }} me-2"></i>
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
+                    <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
+                        {{ messages|first }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                 {% endfor %}
 
                 {% block body %}{% endblock %}
-            </div>
+            {% block main_container_close %}</div>{% endblock %}
         </main>
 
-        <footer class="mt-auto">
-            <div class="container text-center">
-                <p class="mb-1 fw-bold" style="color: var(--primary-blue)">KHADAMNI WEB</p>
-                <p class="mb-0">© {{ "now"|date("Y") }} - Recrutement Intelligent</p>
+        <footer class="bg-white border-top py-3 text-center text-muted">
+            <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+                <div>© {{ "now"|date('Y') }} Khadamni</div>
+                <a class="text-decoration-none text-orange fw-semibold" href="{{ path('app_home') }}">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Retour à l’accueil
+                </a>
             </div>
         </footer>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         {% block javascripts %}{% endblock %}
     </body>
 </html>

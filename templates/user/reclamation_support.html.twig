@@ -1,0 +1,205 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Support Khadamni{% endblock %}
+
+{% block body %}
+<style>
+    body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+    .support-header { background: white; padding: 15px 20px; border-bottom: 1px solid #e4e6eb; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .form-orange-section { background-color: #f9ce97; border: 1px solid #242424 !important; border-radius: 15px; }
+    .ticket-card { background: #efe3c8; border-radius: 12px; border: none; margin-bottom: 12px; transition: all 0.2s ease; border-left: 4px solid #ccd0d5; cursor: pointer; }
+    .ticket-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    
+    /* Couleurs des bordures selon statut */
+    .status-resolue { border-left-color: #45bd62; }
+    .status-rejetee { border-left-color: #f44336; }
+    .status-attente { border-left-color: #f7b928; }
+    
+    .chat-container { background: #fbdea0; height: 450px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; scroll-behavior: smooth; }
+    .bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 10px; font-size: 0.95rem; line-height: 1.4; position: relative; }
+    .bubble-user { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 4px; }
+    .bubble-admin { align-self: flex-start; background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
+    .bubble-time { font-size: 0.7rem; opacity: 0.7; display: block; margin-top: 5px; text-align: right; }
+    .btn-create { background: #1877f2; color: white; border-radius: 25px; font-weight: 600; padding: 8px 20px; border: none; }
+</style>
+
+<div class="support-header d-flex justify-content-between align-items-center">
+    <div>
+        <h5 class="fw-bold mb-0 text-dark">Centre d'assistance</h5>
+        <small class="text-muted">Gérez vos réclamations</small>
+    </div>
+    <button class="btn btn-create shadow-sm" data-bs-toggle="collapse" data-bs-target="#newTicketForm">
+        <i class="fas fa-plus me-2"></i>Nouvelle Réclamation
+    </button>
+</div>
+
+<div class="container mt-4">
+    {# Messages flash #}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="collapse mb-5" id="newTicketForm">
+        <div class="card card-body form-orange-section shadow-sm p-4">
+            <h6 class="fw-bold mb-3" style="color: #854d0e;"><i class="fas fa-pen me-2"></i>Décrivez votre problème</h6>
+            {{ form_start(form) }}
+                <div class="mb-3">
+                    {{ form_label(form.sujet, 'Sujet', {'label_attr': {'class': 'small fw-bold'}}) }}
+                    {{ form_widget(form.sujet, {'attr': {'class': 'form-control rounded-pill border-0 shadow-sm', 'placeholder': 'Titre de la réclamation'}}) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'small fw-bold'}}) }}
+                    {{ form_widget(form.description, {'attr': {'class': 'form-control rounded-3 border-0 shadow-sm', 'placeholder': 'Détails...', 'rows': '4'}}) }}
+                </div>
+                <div class="row align-items-end">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        {{ form_label(form.type, 'Type de réclamation', {'label_attr': {'class': 'small fw-bold'}}) }}
+                        {{ form_widget(form.type, {'attr': {'class': 'form-select rounded-pill border-0 shadow-sm'}}) }}
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-warning text-white rounded-pill px-5 fw-bold shadow-sm" style="background-color: #f6ad55; border:none;">
+                            Envoyer la réclamation
+                        </button>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center mb-3 pt-3 border-top">
+        <h3 class="text-muted small fw-bold mb-0 text-uppercase">Vos Réclamations Passées</h3>
+    </div>
+    
+    {% for rec in reclamations %}
+        {% set status_val = rec.statut.value|default(rec.statut) %}
+        {% set is_closed = (status_val == 'RESOLUE' or status_val == 'REJETEE') %}
+        
+        <div class="ticket-card shadow-sm {{ is_closed ? (status_val == 'RESOLUE' ? 'status-resolue' : 'status-rejetee') : 'status-attente' }}" 
+             id="ticket-{{ rec.idReclamation }}"
+             onclick="openChatModal('{{ rec.idReclamation }}', '{{ rec.sujet|escape('js') }}', '{{ csrf_token('reply' ~ rec.idReclamation) }}', '{{ path('app_user_reclamation_reply', {'id': rec.idReclamation}) }}', {{ is_closed ? 'true' : 'false' }})">
+            
+            <div class="card-body d-flex justify-content-between align-items-center p-3">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-light p-3 me-3 text-primary"><i class="fas fa-envelope-open-text"></i></div>
+                    <div>
+                        <h6 class="mb-1 fw-bold">{{ rec.sujet }}</h6>
+                        <span class="badge {{ status_val == 'RESOLUE' ? 'bg-success' : (status_val == 'REJETEE' ? 'bg-danger' : 'bg-warning text-dark') }} rounded-pill" style="font-size: 0.7rem;">{{ status_val }}</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-muted"></i>
+            </div>
+            
+            <script type="application/json" id="data-{{ rec.idReclamation }}">
+                [
+                    {
+                        "type": "user", 
+                        "msg": "{{ rec.description|escape('js') }}", 
+                        "time": "{{ rec.dateCreation|date('H:i') }}"
+                    }
+                    {% for rep in rec.reponseReclamations %}
+                    ,{
+                        "type": "{{ rep.isAuteurAdmin ? 'admin' : 'user' }}", 
+                        "msg": "{{ rep.message|escape('js') }}", 
+                        "time": "{{ rep.dateReponse|date('H:i') }}"
+                    }
+                    {% endfor %}
+                ]
+            </script>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Vous n'avez pas encore de réclamation.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header bg-white border-bottom">
+                <h6 class="modal-title fw-bold" id="chatTitle">Détails</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="chatBody" class="chat-container"></div>
+            </div>
+            <div class="modal-footer bg-white p-3 border-top">
+                <form id="chatForm" method="POST" class="w-100 d-flex align-items-center">
+                    <input type="hidden" name="_token" id="chatToken">
+                    <div class="input-group">
+                        <input type="text" name="message" id="messageInput" class="form-control border-2 bg-light rounded-pill ps-4" placeholder="Écrire une réponse..." required>
+                        <button type="submit" class="btn btn-primary rounded-circle ms-2" style="width: 45px; height: 45px;"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </form>
+                <div id="chatClosedAlert" class="alert alert-secondary w-100 text-center mb-0 d-none">
+                    <i class="fas fa-lock me-2"></i> Cette réclamation est clôturée. La discussion est en lecture seule.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openChatModal(id, sujet, token, actionUrl, isClosed) {
+        const modalElement = document.getElementById('chatModal');
+        const modal = new bootstrap.Modal(modalElement);
+        const body = document.getElementById('chatBody');
+        const form = document.getElementById('chatForm');
+        const alertClosed = document.getElementById('chatClosedAlert');
+        
+        document.getElementById('chatTitle').innerText = sujet;
+        document.getElementById('chatToken').value = token;
+        form.action = actionUrl;
+        body.innerHTML = '';
+
+        if (isClosed) {
+            form.classList.add('d-none');
+            alertClosed.classList.remove('d-none');
+        } else {
+            form.classList.remove('d-none');
+            alertClosed.classList.add('d-none');
+        }
+
+        const dataElement = document.getElementById('data-' + id);
+        if (dataElement) {
+            try {
+                const messages = JSON.parse(dataElement.textContent);
+                messages.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = `bubble ${m.type === 'user' ? 'bubble-user' : 'bubble-admin'}`;
+                    div.innerHTML = `${m.msg} <span class="bubble-time">${m.time}</span>`;
+                    body.appendChild(div);
+                });
+            } catch (e) {
+                console.error("Erreur lors de la lecture des messages", e);
+            }
+        }
+        
+        modal.show();
+        
+        // Petit délai pour laisser le temps au DOM de se construire avant le scroll
+        setTimeout(() => { 
+            body.scrollTop = body.scrollHeight; 
+        }, 300);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatIdToOpen = urlParams.get('open_chat');
+
+        if (chatIdToOpen) {
+            const ticketToClick = document.getElementById('ticket-' + chatIdToOpen);
+            if (ticketToClick) {
+                ticketToClick.click();
+                // Nettoyer l'URL sans recharger la page
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+    });
+</script>
+{% endblock %}
