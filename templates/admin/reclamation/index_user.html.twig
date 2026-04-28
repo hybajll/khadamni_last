@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réclamations Utilisateurs{% endblock %}
+
+{% block body %}
+<style>
+    .nav-custom {
+        background-color: #2c3e50;
+        padding: 10px 15px;
+        border-radius: 5px 5px 0 0;
+    }
+    .btn-orange {
+        background-color: #fd510d;
+        color: white;
+        font-weight: bold;
+        border: none;
+    }
+    .btn-orange:hover {
+        background-color: #e4450a;
+        color: white;
+    }
+    .table-container {
+        background: white;
+        border-radius: 0 0 5px 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="container-fluid p-3">
+    {# Header Style #}
+    <div class="d-flex align-items-center justify-content-between nav-custom text-white">
+        <h6 class="mb-0 fw-bold"><i class="fas fa-user me-2 text-warning"></i>Dashboard : Utilisateurs</h6>
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_admin_reclamation_index_societe') }}" class="btn btn-sm btn-outline-light">Basculer vers Sociétés</a>
+            <a href="{{ path('app_reclamation_new') }}" class="btn btn-sm btn-success fw-bold"><i class="fas fa-plus"></i> Nouvelle</a>
+        </div>
+    </div>
+
+    <div class="table-container p-3 border border-top-0">
+        {# Filtre par Date #}
+        <form method="get" action="{{ path('app_admin_reclamation_index_user') }}" class="row g-2 mb-4 align-items-end">
+            <div class="col-auto">
+                <label class="form-label small fw-bold text-muted">Rechercher par date :</label>
+                <input type="date" name="searchDate" class="form-control form-control-sm border-primary" value="{{ searchDate }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i></button>
+                <a href="{{ path('app_admin_reclamation_index_user') }}" class="btn btn-secondary btn-sm">Effacer</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th class="border-0">ID</th>
+                        <th class="border-0">Utilisateur</th>
+                        <th class="border-0">Sujet</th>
+                        <th class="border-0">Statut</th>
+                        <th class="border-0">Date</th>
+                        <th class="border-0 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in reclamations %}
+                        {% include 'admin/reclamation/_row_table.html.twig' with {'type': 'user', 'reclamation': rec} %}
+                    {% else %}
+                        <tr><td colspan="6" class="text-center py-5 text-muted italic">Aucune réclamation utilisateur trouvée.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
