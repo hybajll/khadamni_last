@@ -54,6 +54,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: "L'adresse email n'est pas valide.")]
     protected ?string $email = null;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Regex(
+        pattern: '/^[\d\s\-\+\(\)]+$/',
+        message: 'Le numero de telephone n\'est pas valide.'
+    )]
+    protected ?string $phone = null;
+
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.', groups: ['user_password'])]
     #[Assert\Length(
@@ -128,6 +135,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
         return $this;
     }
 
