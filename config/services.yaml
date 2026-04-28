@@ -1,21 +1,35 @@
 # config/services.yaml
 
-# Put parameters here that don't change between machines (e.g. secret tokens)
-# config/services.yaml
-
 parameters:
-    # Dossier pour les CV
+    # Dossier pour les CV (Ton paramètre local)
     cv_directory: '%kernel.project_dir%/public/uploads/cvs'
     
-    # Paramètres pour la vidéo (URL et Chemin local)
-    app.motivational_video_embed_url: 'https://www.youtube.com/embed/votre_id'
-    app.motivational_video_path: '%kernel.project_dir%/public/videos/khadamni-intro.mp4'
+    # Paramètres dynamiques récupérés du fichier .env (Version de ta collègue)
+    app.motivational_video_embed_url: '%env(string:MOTIVATIONAL_VIDEO_EMBED_URL)%'
+    app.motivational_video_path: '%env(string:MOTIVATIONAL_VIDEO_PATH)%'
+    app.openai_api_key: '%env(string:OPENAI_API_KEY)%'
+    app.openai_model: '%env(string:OPENAI_MODEL)%'
+    app.ai_provider: '%env(string:AI_PROVIDER)%'
+    app.openrouter_api_key: '%env(string:OPENROUTER_API_KEY)%'
+    app.openrouter_model: '%env(string:OPENROUTER_MODEL)%'
+    app.gemini_api_key: '%env(string:GEMINI_API_KEY)%'
+    app.gemini_model: '%env(string:GEMINI_MODEL)%'
+    
+    # Aliases pour le binding automatique
+    gemini_api_key: '%env(GEMINI_API_KEY)%'
+    gemini_model: '%env(GEMINI_MODEL)%'
 
 services:
     _defaults:
-        autowire: true
-        autoconfigure: true
-    
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        
+        # Injection automatique des clés API dans tes services
+        bind:
+            $geminiApiKey: '%gemini_api_key%'
+            $geminiModel: '%gemini_model%'
+
+    # Chargement automatique des classes du dossier src/
     App\:
         resource: '../src/'
         exclude:

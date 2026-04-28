@@ -19,7 +19,8 @@ class ReponseReclamation
     private ?Reclamation $reclamation = null;
 
     /**
-     * L'auteur peut être un User (incluant Admin ou Etudiant via héritage)
+     * L'auteur peut être un User (Admin, Etudiant, etc.)
+     * Si null, le message est considéré comme envoyé par l'IA.
      */
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'auteur_id', referencedColumnName: 'id', nullable: true)]
@@ -44,15 +45,19 @@ class ReponseReclamation
     }
 
     /**
-     * Requis par Twig dans user/reclamation_support.html.twig
-     * Vérifie si l'auteur du message est un administrateur
+     * Utilisé par Twig pour déterminer le côté de la bulle de chat.
+     * Un message est considéré "Admin/Support" s'il est écrit par un Admin
+     * OU s'il est écrit par l'IA (auteur === null).
      */
     public function isAuteurAdmin(): bool
     {
-        // On vérifie si l'auteur est un User et s'il possède le rôle ADMIN
+        // CAS 1 : C'est l'Assistant IA (pas d'auteur en base)
+        if ($this->auteur === null && $this->societyAuteur === null) {
+            return true; 
+        }
+
+        // CAS 2 : C'est un utilisateur humain, on vérifie ses rôles
         if ($this->auteur !== null) {
-            // Si vous utilisez un héritage type "Admin extends User", instanceof fonctionne.
-            // Sinon, on vérifie les rôles.
             return in_array('ROLE_ADMIN', $this->auteur->getRoles());
         }
 
@@ -60,17 +65,17 @@ class ReponseReclamation
     }
 
     /**
-     * Helper optionnel : Retourne le nom de l'auteur peu importe son type
+     * Retourne le nom de l'auteur pour l'affichage
      */
     public function getNomAffichage(): string
     {
         if ($this->societyAuteur) {
-            return $this->societyAuteur->getNom(); // Remplacez par le getter réel de Society
+            return $this->societyAuteur->getNom();
         }
         if ($this->auteur) {
-            return $this->auteur->getEmail(); // Ou getNom() / getPrenom()
+            return $this->auteur->getNom() ?? $this->auteur->getEmail();
         }
-        return "Anonyme";
+        return "Assistant IA";
     }
 
     // --- Getters & Setters ---

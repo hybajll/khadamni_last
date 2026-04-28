@@ -1,0 +1,18 @@
+{# templates/emails/reclamation_status_update.html.twig #}
+
+{#
+<h1>Bonjour {{ user.nom }} !</h1>
+<p>Le statut de votre réclamation concernant <strong>"{{ reclamation.sujet }}"</strong> a été mis à jour.</p>
+<p>Nouveau statut : <strong>{{ newStatus }}</strong></p>
+<p>Vous pouvez consulter les détails sur votre espace client.</p>
+#}
+
+
+<p>Bonjour {{ reclamation.user.nom }},</p>
+<p>Message de notre assistant :</p>
+<blockquote>
+    {{ aiMessage|nl2br }}
+</blockquote>
+<p>Le statut de votre réclamation est maintenant : 
+   <strong>{{ reclamation.statut.value }}</strong> 
+</p>
