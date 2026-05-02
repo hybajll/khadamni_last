@@ -21,29 +21,42 @@ class ReclamationController extends AbstractController
     public function index(ReclamationRepository $reclamationRepository, Request $request): Response
     {
         $page = (int) $request->query->get('page', 1);
-        $limit = 5; 
+        $limit = 5;
         $offset = ($page - 1) * $limit;
 
-        $stats = $reclamationRepository->getStatistics();
-        $totalReclamations = $stats['total'];
-        $totalPages = ceil($totalReclamations / $limit);
+        // 1. Récupération des paramètres de filtrage
+        $tab = $request->query->get('tab', 'societe');
+        $searchDate = $request->query->get('searchDate');
 
-        $reclamations = $reclamationRepository->findBy(
-            [], 
-            ['date_creation' => 'DESC'], 
-            $limit, 
-            $offset
-        );
+        // 2. Préparation de la date pour le Repository
+        $dateImmutable = null;
+        if ($searchDate) {
+            try {
+                $dateImmutable = new \DateTimeImmutable($searchDate);
+            } catch (\Exception $e) {
+                $this->addFlash('danger', 'Format de date invalide.');
+            }
+        }
+
+        // 3. Utilisation de la méthode unique et robuste du Repository
+        // Cette méthode gère l'onglet ET la date simultanément
+        $reclamations = $reclamationRepository->findByTabAndDate($tab, $dateImmutable, $limit, $offset);
+        $totalReclamations = $reclamationRepository->countByTabAndDate($tab, $dateImmutable);
+
+        $totalPages = ceil($totalReclamations / $limit);
 
         return $this->render('admin/reclamation/index.html.twig', [
             'reclamations' => $reclamations,
-            'stats' => $stats,
+            'stats' => $reclamationRepository->getStatistics(),
             'statuts_disponibles' => StatutReclamation::cases(),
             'currentPage' => $page,
             'totalPages' => $totalPages,
+            'searchDate' => $searchDate,
+            'activeTab' => $tab,
         ]);
     }
-#[Route('/new', name: 'app_reclamation_new', methods: ['GET', 'POST'])]
+
+    #[Route('/new', name: 'app_reclamation_new', methods: ['GET', 'POST'])]
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -57,26 +70,20 @@ class ReclamationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 1. Persister la réclamation
             $entityManager->persist($reclamation);
             $entityManager->flush();
 
-            // 2. Déterminer si c'est simple ou complexe
+            // Logique IA & Notification
             $isSimple = $aiService->processNewReclamation($reclamation);
-
-            // 3. IA : Générer, Enregistrer en BDD et récupérer l'objet réponse
             $reply = $notificationService->generateAndStoreAiReply($reclamation, null);
-
-            // 4. Envoyer l'email avec le message déjà stocké
             $notificationService->sendStatusUpdateEmail($reclamation, $reply->getMessage());
 
-            // 5. Flash messages
             if (!$isSimple) {
                 $this->addFlash('warning', 'Réclamation complexe : intervention admin requise.');
             }
             $this->addFlash('success', 'Réclamation créée et réponse IA envoyée.');
 
-            return $this->redirectToRoute('app_admin_reclamation_index');
+            return $this->redirectToCorrectList($reclamation);
         }
 
         return $this->render('admin/reclamation/new.html.twig', [
@@ -86,9 +93,9 @@ class ReclamationController extends AbstractController
 
     #[Route('/{id}/statut', name: 'app_admin_reclamation_set_statut', methods: ['POST'])]
     public function setStatut(
-        int $id, 
-        Request $request, 
-        ReclamationRepository $reclamationRepository, 
+        int $id,
+        Request $request,
+        ReclamationRepository $reclamationRepository,
         EntityManagerInterface $entityManager,
         NotificationService $notificationService
     ): Response {
@@ -103,7 +110,6 @@ class ReclamationController extends AbstractController
             $entityManager->flush();
 
             if ($nouveauStatut === StatutReclamation::RESOLUE) {
-                // Ici on laisse l'email générer son propre message IA si besoin
                 $notificationService->sendStatusUpdateEmail($reclamation);
                 $this->addFlash('success', 'Statut RESOLU et email envoyé.');
             } else {
@@ -111,39 +117,46 @@ class ReclamationController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('app_admin_reclamation_index');
+        return $this->redirectToCorrectList($reclamation);
+    }
+
+    #[Route('/{id}/edit', name: 'app_admin_reclamation_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Reclamation $reclamation, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(ReclamationType::class, $reclamation);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $reclamation->setDateModification(new \DateTime());
+            $entityManager->flush();
+
+            $this->addFlash('success', 'La réclamation a été modifiée avec succès.');
+            return $this->redirectToCorrectList($reclamation);
+        }
+
+        return $this->render('admin/reclamation/edit.html.twig', [
+            'reclamation' => $reclamation,
+            'form' => $form->createView(),
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'app_admin_reclamation_delete', methods: ['POST'])]
-    public function delete(Request $request, Reclamation $reclamation, EntityManagerInterface $entityManager): Response 
+    public function delete(Request $request, Reclamation $reclamation, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $reclamation->getIdReclamation(), $request->request->get('_token'))) {
             $entityManager->remove($reclamation);
             $entityManager->flush();
             $this->addFlash('danger', 'Réclamation supprimée.');
         }
-        return $this->redirectToRoute('app_admin_reclamation_index');
+        
+        // Comme l'objet est supprimé, on définit manuellement le tab ou on passe l'objet avant suppression
+        $tab = ($reclamation->getUser() !== null) ? 'user' : 'societe';
+        return $this->redirectToRoute('app_admin_reclamation_index', ['tab' => $tab]);
     }
 
-    #[Route('/{id}/edit', name: 'app_admin_reclamation_edit', methods: ['GET', 'POST'])]
-public function edit(Request $request, Reclamation $reclamation, EntityManagerInterface $entityManager): Response
-{
-    // On crée le formulaire en passant l'objet existant
-    $form = $this->createForm(ReclamationType::class, $reclamation);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $reclamation->setDateModification(new \DateTime());
-        $entityManager->flush();
-
-        $this->addFlash('success', 'La réclamation a été modifiée avec succès.');
-
-        return $this->redirectToRoute('app_admin_reclamation_index');
+    private function redirectToCorrectList(Reclamation $reclamation): Response
+    {
+        $tab = ($reclamation->getUser() !== null) ? 'user' : 'societe';
+        return $this->redirectToRoute('app_admin_reclamation_index', ['tab' => $tab]);
     }
-
-    return $this->render('admin/reclamation/edit.html.twig', [
-        'reclamation' => $reclamation,
-        'form' => $form->createView(),
-    ]);
-}
 }

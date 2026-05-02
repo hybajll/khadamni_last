@@ -19,6 +19,9 @@
                             <a href="{{ path('society_offer_edit', {id: offer.id}) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-edit me-2"></i> Modifier
                             </a>
+                            <a href="{{ path('society_offer_candidatures', {id: offer.id}) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-users me-2"></i> Candidatures
+                            </a>
                             <form method="POST" action="{{ path('society_offer_delete', {id: offer.id}) }}" class="d-inline" onsubmit="return confirm('Etes-vous sur de vouloir supprimer cette offre ?');">
                                 <button type="submit" class="btn btn-outline-danger">
                                     <i class="fas fa-trash me-2"></i> Supprimer

@@ -42,8 +42,21 @@
         </a>
     </div>
 
-    <div class="px-3 mt-3">
-        {# Navigation des onglets #}
+<div class="px-3 mt-3">
+    {# Formulaire de recherche par date #}
+  
+    <form method="get" action="{{ path('app_admin_reclamation_index') }}" class="d-flex shadow-sm">
+        {# CRUCIAL : Garder l'onglet actif lors de la recherche #}
+        <input type="hidden" name="tab" value="{{ activeTab }}">
+        
+        <input type="date" name="searchDate" value="{{ searchDate }}" class="form-control form-control-sm border-0">
+        <button type="submit" class="btn btn-warning btn-sm">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+
+    {# Navigation des onglets (votre code existant) #}
+ 
         <ul class="nav nav-tabs" id="reclamationTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link {{ activeTab == 'societe' ? 'active' : '' }}" 
