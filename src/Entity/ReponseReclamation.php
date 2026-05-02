@@ -70,7 +70,7 @@ class ReponseReclamation
     public function getNomAffichage(): string
     {
         if ($this->societyAuteur) {
-            return $this->societyAuteur->getNom();
+            return $this->societyAuteur->getName() ?? $this->societyAuteur->getEmail();
         }
         if ($this->auteur) {
             return $this->auteur->getNom() ?? $this->auteur->getEmail();

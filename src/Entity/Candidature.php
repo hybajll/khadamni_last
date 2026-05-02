@@ -22,9 +22,9 @@ class Candidature
     #[ORM\Column(length: 255)]
     private ?string $cvPath = null;
 
-    #[ORM\ManyToOne(targetEntity: Offre::class, inversedBy: 'candidatures')]
+    #[ORM\ManyToOne(targetEntity: Offer::class)]
     #[ORM\JoinColumn(name: "offer_id", referencedColumnName: "id", nullable: false)]
-    private ?Offre $offre = null;
+    private ?Offer $offre = null;
 
 
 #[ORM\OneToOne(mappedBy: 'candidature', targetEntity: Recommendation::class, cascade: ['persist', 'remove'])]
@@ -36,8 +36,8 @@ private ?Recommendation $recommendation = null; // Assure-toi que c'est bien éc
     public function setEmail(string $email): static { $this->email = $email; return $this; }
     public function getCvPath(): ?string { return $this->cvPath; }
     public function setCvPath(string $cvPath): static { $this->cvPath = $cvPath; return $this; }
-    public function getOffre(): ?Offre { return $this->offre; }
-    public function setOffre(?Offre $offre): static { $this->offre = $offre; return $this; }
+    public function getOffre(): ?Offer { return $this->offre; }
+    public function setOffre(?Offer $offre): static { $this->offre = $offre; return $this; }
     public function getRecommendation(): ?Recommendation { return $this->recommendation; }
     public function setRecommendation(Recommendation $recommendation): static {
         if ($recommendation->getCandidature() !== $this) { $recommendation->setCandidature($this); }

@@ -230,8 +230,9 @@
                             <li class="nav-item"><a class="nav-link" href="{{ path(isSociety ? 'society_logout' : 'app_logout') }}">Déconnexion</a></li>
                             <li class="nav-item ms-lg-2 d-flex align-items-center">
                                 <a class="nav-link py-1" href="{{ path(isSociety ? 'society_profile' : 'app_profile') }}" title="Mon profil">
-                                    {% if not isSociety and app.user.avatarPath %}
-                                        <img src="{{ asset(app.user.avatarPath) }}" alt="Avatar" class="nav-avatar">
+                                    {% set avatarPath = attribute(app.user, 'avatarPath') is defined ? attribute(app.user, 'avatarPath') : null %}
+                                    {% if avatarPath %}
+                                        <img src="{{ asset(avatarPath) }}" alt="Avatar" class="nav-avatar">
                                     {% else %}
                                         {% set displayName = isSociety ? (app.user.name ?: app.user.email) : (app.user.prenom ?: app.user.email) %}
                                         <span class="nav-avatar-fallback">{{ displayName|first|upper }}</span>

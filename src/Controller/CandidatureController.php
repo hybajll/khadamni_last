@@ -75,7 +75,7 @@ class CandidatureController extends AbstractController
     #[Route('/admin/offres/{id}/candidatures', name: 'app_admin_offre_candidatures')]
      public function adminScores(int $id, EntityManagerInterface $em): Response
 {
-    $offre = $em->getRepository(\App\Entity\Offre::class)->find($id);
+    $offre = $em->getRepository(\App\Entity\Offer::class)->find($id);
 
     if (!$offre) {
         throw $this->createNotFoundException('Offre introuvable');

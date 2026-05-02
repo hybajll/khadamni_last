@@ -3,7 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Candidature;
-use App\Entity\Offre;
+use App\Entity\Offer;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -18,12 +18,12 @@ class CandidatureType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Adresse Email',
-                'attr' => ['placeholder' => 'exemple@domaine.com']
+                'label' => 'Adresse email',
+                'attr' => ['placeholder' => 'exemple@domaine.com'],
             ])
             ->add('cvPath', FileType::class, [
                 'label' => 'Télécharger votre CV (PDF uniquement)',
-                'mapped' => false, // Important : on gère l'upload manuellement dans le controller
+                'mapped' => false,
                 'required' => true,
                 'constraints' => [
                     new File([
@@ -32,18 +32,16 @@ class CandidatureType extends AbstractType
                             'application/pdf',
                             'application/x-pdf',
                         ],
-                        'mimeTypesMessage' => 'Veuillez télécharger un document PDF valide',
-                    ])
+                        'mimeTypesMessage' => 'Veuillez télécharger un document PDF valide.',
+                    ]),
                 ],
             ])
             ->add('offre', EntityType::class, [
-                'class' => Offre::class,
-                'choice_label' => 'title', // Remplace 'titre' par le nom du champ de ton entité Offre (ex: nom, libelle)
+                'class' => Offer::class,
+                'choice_label' => 'title',
                 'label' => 'Choisir une offre',
                 'placeholder' => 'Sélectionnez une offre',
-            ])
-        ;
-        // Le champ Recommendation a été supprimé car il est généré automatiquement par le code IA
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -53,3 +51,4 @@ class CandidatureType extends AbstractType
         ]);
     }
 }
+
