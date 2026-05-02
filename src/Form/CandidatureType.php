@@ -41,6 +41,7 @@ class CandidatureType extends AbstractType
                 'choice_label' => 'title',
                 'label' => 'Choisir une offre',
                 'placeholder' => 'Sélectionnez une offre',
+                'disabled' => (bool) ($options['offre_disabled'] ?? false),
             ]);
     }
 
@@ -48,6 +49,7 @@ class CandidatureType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Candidature::class,
+            'offre_disabled' => false,
         ]);
     }
 }

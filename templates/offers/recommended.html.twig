@@ -63,10 +63,7 @@
                                 <td class="text-end">
                                     {% if row.offer_id %}
                                         <a class="btn btn-sm btn-light border" href="{{ path('app_offer_public_show', {id: row.offer_id}) }}">Détails</a>
-                                        <form method="post" action="{{ path('app_user_offers_apply', {id: row.offer_id}) }}" class="d-inline">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('apply_offer_' ~ row.offer_id) }}">
-                                            <button type="submit" class="btn btn-sm btn-primary">Postuler</button>
-                                        </form>
+                                        <a class="btn btn-sm btn-primary" href="{{ path('app_candidature_new', {offer: row.offer_id}) }}">Postuler</a>
                                     {% else %}
                                         <span class="text-muted">-</span>
                                     {% endif %}
@@ -81,3 +78,4 @@
     </div>
 </div>
 {% endblock %}
+

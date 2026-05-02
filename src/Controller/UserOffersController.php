@@ -4,14 +4,11 @@ namespace App\Controller;
 
 use App\Repository\CvRepository;
 use App\Repository\OfferRepository;
-use App\Repository\OfferApplicationRepository;
-use App\Entity\OfferApplication;
 use App\Service\CvJobMatchingAssistant;
-use Doctrine\ORM\EntityManagerInterface;
 use App\Service\SubscriptionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -35,8 +32,7 @@ final class UserOffersController extends AbstractController
         OfferRepository $offerRepository,
         CvRepository $cvRepository,
         CvJobMatchingAssistant $matcher,
-    ): Response
-    {
+    ): Response {
         $user = $this->getUser();
         $cv = $cvRepository->findOneBy(['user' => $user]);
 
@@ -47,7 +43,7 @@ final class UserOffersController extends AbstractController
 
         $offers = $offerRepository->findAllActive();
         if ($offers === []) {
-            $this->addFlash('info', "Aucune offre active pour le moment.");
+            $this->addFlash('info', 'Aucune offre active pour le moment.');
             return $this->redirectToRoute('app_user_offers');
         }
 
@@ -57,7 +53,7 @@ final class UserOffersController extends AbstractController
         $cvText = (string) ($cv->getContenuAmeliore() ?: $cv->getContenuOriginal());
         $results = $matcher->match($cvText, $offers);
         if ($results !== [] && isset($results[0]['reason']) && str_contains((string) $results[0]['reason'], 'hors IA')) {
-            $this->addFlash('info', "IA indisponible pour le moment. Matching simplifié (mots-clés) affiché.");
+            $this->addFlash('info', 'IA indisponible pour le moment. Matching simplifié (mots-clés) affiché.');
         }
 
         $recommended = array_values(array_filter($results, static fn (array $row): bool => (int) ($row['score'] ?? 0) >= $minScore));
@@ -65,7 +61,6 @@ final class UserOffersController extends AbstractController
 
         $showTopAnyway = false;
         if ($recommended === [] && $results !== []) {
-            // If nothing passes the threshold, still show the best offers so the page is useful.
             $showTopAnyway = true;
             $recommended = array_slice($results, 0, 10);
         }
@@ -82,12 +77,9 @@ final class UserOffersController extends AbstractController
     public function apply(
         Request $request,
         OfferRepository $offerRepository,
-        OfferApplicationRepository $applicationRepository,
-        EntityManagerInterface $entityManager,
         SubscriptionService $subscriptionService,
         int $id,
-    ): Response
-    {
+    ): Response {
         $offer = $offerRepository->find($id);
         if (!$offer) {
             $this->addFlash('error', 'Offre introuvable.');
@@ -100,10 +92,6 @@ final class UserOffersController extends AbstractController
         }
 
         $user = $this->getUser();
-        if (!$user) {
-            return $this->redirectToRoute('app_login');
-        }
-
         if ($user instanceof \App\Entity\User) {
             $block = $subscriptionService->blockMessageIfNotAllowed($user);
             if ($block) {
@@ -113,24 +101,9 @@ final class UserOffersController extends AbstractController
             }
         }
 
-        $existing = $applicationRepository->findOneByOfferAndUser($offer, $user);
-        if ($existing) {
-            $this->addFlash('info', 'Vous avez déjà postulé à cette offre.');
-            return $this->redirectToRoute('app_offer_public_show', ['id' => $id]);
-        }
-
-        $application = (new OfferApplication())
-            ->setOffer($offer)
-            ->setUser($user);
-
-        $entityManager->persist($application);
-        $entityManager->flush();
-
-        if ($user instanceof \App\Entity\User) {
-            $subscriptionService->recordAction($user);
-        }
-
-        $this->addFlash('success', 'Candidature envoyée (simulation).');
-        return $this->redirectToRoute('app_offer_public_show', ['id' => $id]);
+        return $this->redirectToRoute('app_candidature_new', [
+            'offer' => $offer->getId(),
+        ]);
     }
 }
+

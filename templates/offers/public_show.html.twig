@@ -18,10 +18,7 @@
                     </div>
                     <div class="d-flex gap-2 align-items-start">
                         {% if is_granted('ROLE_USER') %}
-                            <form method="post" action="{{ path('app_user_offers_apply', {id: offer.id}) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('apply_offer_' ~ offer.id) }}">
-                                <button type="submit" class="btn btn-outline-primary">Postuler</button>
-                            </form>
+                            <a class="btn btn-outline-primary" href="{{ path('app_candidature_new', {offer: offer.id}) }}">Postuler</a>
                         {% else %}
                             <a class="btn btn-outline-primary" href="{{ path('app_login') }}">Postuler (connexion)</a>
                         {% endif %}
