@@ -32,6 +32,22 @@ class CvUserType extends AbstractType
                     ]),
                 ],
             ])
+            ->add('cvPhoto', FileType::class, [
+                'label' => 'Photo (optionnel, pour le PDF)',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '3M',
+                        'mimeTypes' => [
+                            'image/jpeg',
+                            'image/png',
+                            'image/webp',
+                        ],
+                        'mimeTypesMessage' => 'Veuillez importer une image (JPG, PNG ou WEBP).',
+                    ]),
+                ],
+            ])
             ->add('contenuOriginal', TextareaType::class, [
                 'label' => 'CV en texte (optionnel)',
                 'required' => false,
@@ -51,4 +67,3 @@ class CvUserType extends AbstractType
         ]);
     }
 }
-

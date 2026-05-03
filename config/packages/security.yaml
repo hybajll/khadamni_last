@@ -14,9 +14,6 @@ security:
             entity:
                 class: App\Entity\Society
                 property: email
-        app_chain_provider:
-            chain:
-                providers: [app_user_provider, society_provider]
 
     firewalls:
         dev:
@@ -27,7 +24,6 @@ security:
             pattern: ^/society
             lazy: true
             provider: society_provider
-            context: shared
 
             form_login:
                 login_path: society_login
@@ -43,8 +39,7 @@ security:
 
         main:
             lazy: true
-            provider: app_chain_provider
-            context: shared
+            provider: app_user_provider
 
             form_login:
                 login_path: app_login

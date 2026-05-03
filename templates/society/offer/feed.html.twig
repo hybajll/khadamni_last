@@ -99,6 +99,7 @@
                                 {% if isMine %}
                                     <a class="btn btn-outline-primary" href="{{ path('society_offer_show', {id: offer.id}) }}">Voir</a>
                                     <a class="btn btn-outline-primary" href="{{ path('society_offer_edit', {id: offer.id}) }}">Modifier</a>
+                                    <a class="btn btn-outline-secondary" href="{{ path('society_offer_candidatures', {id: offer.id}) }}">Candidatures</a>
                                 {% else %}
                                     <a class="btn btn-outline-primary" href="{{ path('app_offer_public_show', {id: offer.id}) }}">Voir</a>
                                 {% endif %}
@@ -113,4 +114,3 @@
     {% endif %}
 </div>
 {% endblock %}
-

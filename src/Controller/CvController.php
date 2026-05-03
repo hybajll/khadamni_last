@@ -32,6 +32,7 @@ final class CvController extends AbstractController
 
         return $this->render('cv/manage.html.twig', [
             'cv' => $cv,
+            'mpdf_available' => class_exists(\Mpdf\Mpdf::class),
         ]);
     }
 
@@ -62,6 +63,10 @@ final class CvController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile|null $uploadedPdf */
             $uploadedPdf = $form->get('cvPdf')->getData();
+            /** @var UploadedFile|null $uploadedPhoto */
+            $uploadedPhoto = $form->get('cvPhoto')->getData();
+            /** @var UploadedFile|null $uploadedPhoto */
+            $uploadedPhoto = $form->get('cvPhoto')->getData();
 
             $hasText = trim((string) $cv->getContenuOriginal()) !== '';
             $hasPdf = $uploadedPdf instanceof UploadedFile;
@@ -92,6 +97,10 @@ final class CvController extends AbstractController
                         ]);
                     }
                 }
+            }
+
+            if ($uploadedPhoto instanceof UploadedFile) {
+                $cv->setCvPhotoPath($this->saveCvPhoto($uploadedPhoto));
             }
 
             if (trim((string) $cv->getContenuOriginal()) === '') {
@@ -135,6 +144,8 @@ final class CvController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile|null $uploadedPdf */
             $uploadedPdf = $form->get('cvPdf')->getData();
+            /** @var UploadedFile|null $uploadedPhoto */
+            $uploadedPhoto = $form->get('cvPhoto')->getData();
 
             if ($uploadedPdf instanceof UploadedFile) {
                 $relativePath = $this->saveCvPdf($uploadedPdf);
@@ -153,6 +164,10 @@ final class CvController extends AbstractController
                 } else {
                     $this->addFlash('info', 'PDF importé, mais extraction du texte impossible. Vous pouvez coller le texte manuellement.');
                 }
+            }
+
+            if ($uploadedPhoto instanceof UploadedFile) {
+                $cv->setCvPhotoPath($this->saveCvPhoto($uploadedPhoto));
             }
 
             if (trim((string) $cv->getContenuOriginal()) === '') {
@@ -206,7 +221,11 @@ final class CvController extends AbstractController
             return $this->redirectToRoute('app_cv_new');
         }
 
-        $result = $cvAiAssistant->improveAndAdvise((string) $cv->getContenuOriginal());
+        $targetLang = strtolower(trim((string) $request->request->get('target_lang', 'auto')));
+        $targetLang = in_array($targetLang, ['auto', 'fr', 'en'], true) ? $targetLang : 'auto';
+        $targetLang = $targetLang === 'auto' ? null : $targetLang;
+
+        $result = $cvAiAssistant->improveAndAdvise((string) $cv->getContenuOriginal(), $targetLang);
         if ($result->improvedText === '') {
             $this->addFlash('error', 'Veuillez ajouter du texte à votre CV avant de l’améliorer.');
             return $this->redirectToRoute('app_cv_edit');
@@ -288,5 +307,19 @@ final class CvController extends AbstractController
         $uploadedPdf->move($uploadsDir, $safeName);
 
         return 'uploads/cv/'.$safeName;
+    }
+
+    private function saveCvPhoto(UploadedFile $uploadedPhoto): string
+    {
+        $uploadsDir = $this->getParameter('kernel.project_dir').'/public/uploads/cv/photos';
+        if (!is_dir($uploadsDir)) {
+            mkdir($uploadsDir, 0775, true);
+        }
+
+        $extension = $uploadedPhoto->guessExtension() ?: 'bin';
+        $safeName = bin2hex(random_bytes(8)).'.'.$extension;
+        $uploadedPhoto->move($uploadsDir, $safeName);
+
+        return 'uploads/cv/photos/'.$safeName;
     }
 }

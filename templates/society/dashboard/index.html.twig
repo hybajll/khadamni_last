@@ -10,6 +10,12 @@
             <p class="text-muted">Bienvenue, {{ society.name }}</p>
         </div>
         <div class="col-auto">
+            <a href="#" class="btn btn-outline-primary btn-lg me-2" onclick="return false;" title="Bientôt disponible">
+                <i class="fas fa-newspaper me-2"></i> Actualités
+            </a>
+            <a href="{{ path('society_recommendations') }}" class="btn btn-outline-primary btn-lg me-2">
+                <i class="fas fa-users me-2"></i> Recommandations
+            </a>
             <a href="{{ path('society_offer_new') }}" class="btn btn-primary btn-lg">
                 <i class="fas fa-plus me-2"></i> Nouvelle offre
             </a>
@@ -111,6 +117,9 @@
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ path('society_offer_show', {id: offer.id}) }}" class="btn btn-outline-primary" title="Voir">
                                                 <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ path('society_offer_candidatures', {id: offer.id}) }}" class="btn btn-outline-secondary" title="Candidatures">
+                                                <i class="fas fa-users"></i>
                                             </a>
                                             <a href="{{ path('society_offer_edit', {id: offer.id}) }}" class="btn btn-outline-secondary" title="Modifier">
                                                 <i class="fas fa-edit"></i>

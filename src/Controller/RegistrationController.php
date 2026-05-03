@@ -56,6 +56,7 @@ class RegistrationController extends AbstractController
                 ->setNom((string) $user->getNom())
                 ->setPrenom((string) $user->getPrenom())
                 ->setEmail((string) $user->getEmail())
+                ->setPhone($user->getPhone())
                 ->setPassword($passwordHasher->hashPassword($userToPersist, (string) $user->getPassword()))
                 ->setIsActive(true)
                 ->setAdminRole(null)

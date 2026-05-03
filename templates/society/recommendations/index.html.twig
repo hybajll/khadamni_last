@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recommandations - Société{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Candidats recommandés</h1>
+            <div class="text-muted small">Toutes vos offres, triées du plus recommandé au moins recommandé.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="{{ path('society_dashboard') }}">Tableau de bord</a>
+            <a class="btn btn-primary" href="{{ path('society_offers_feed', {scope: 'mine'}) }}">Mes offres</a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted">Filtre score min:</span>
+                <a class="btn btn-sm {{ min == 0 ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('society_recommendations', {min: 0}) }}">0%</a>
+                <a class="btn btn-sm {{ min == 0.5 ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('society_recommendations', {min: 0.5}) }}">50%</a>
+                <a class="btn btn-sm {{ min == 0.7 ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('society_recommendations', {min: 0.7}) }}">70%</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 rounded-top-4 d-flex justify-content-between align-items-center">
+            <div class="fw-semibold">{{ rows|length }} candidature(s)</div>
+            <div class="text-muted small">Tri: score recommandation → récent</div>
+        </div>
+        <div class="card-body">
+            {% if rows is empty %}
+                <div class="alert alert-info mb-0">Aucune candidature ne correspond au filtre.</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                        <tr class="text-muted small">
+                            <th>Offre</th>
+                            <th>Candidat</th>
+                            <th>Score</th>
+                            <th>Mots-clés (offre↔CV)</th>
+                            <th class="text-end">CV</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ row.offer.title }}</div>
+                                    <div class="small text-muted">
+                                        <a href="{{ path('society_offer_candidatures', {id: row.offer.id}) }}">Voir toutes les candidatures</a>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold">{{ row.candidature.email }}</td>
+                                <td>
+                                    <div class="small text-muted">Recommandation: {{ (row.recommendationScore * 100)|round }}%</div>
+                                    <div class="small text-muted">Mots-clés: {{ (row.keywordScore * 100)|round }}%</div>
+                                </td>
+                                <td>
+                                    {% if row.matchedKeywords is empty %}
+                                        <span class="text-muted small">—</span>
+                                    {% else %}
+                                        {% for k in row.matchedKeywords %}
+                                            <span class="badge text-bg-light border">{{ k }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if row.candidature.cvPath %}
+                                        <a class="btn btn-sm btn-outline-primary" target="_blank" href="{{ asset('uploads/cvs/' ~ row.candidature.cvPath) }}">Télécharger</a>
+                                    {% else %}
+                                        <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

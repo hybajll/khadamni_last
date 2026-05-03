@@ -6,7 +6,7 @@
 <div class="container py-4">
     <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
         <h1 class="h4 mb-1 text-darken">Modifier mon CV</h1>
-        <p class="text-muted mb-0">Vous pouvez mettre à jour le texte, ou ré-importer un PDF.</p>
+        <p class="text-muted mb-0">Vous pouvez mettre à jour le texte, ré-importer un PDF, ou ajouter une photo pour le PDF.</p>
     </div>
 
     <div class="card">
@@ -24,6 +24,13 @@
                 {{ form_widget(form.cvPdf, {'attr': {'class': 'form-control'}}) }}
                 <div class="form-text">Si vous importez un nouveau PDF, il remplacera l’ancien.</div>
                 <div class="text-danger small">{{ form_errors(form.cvPdf) }}</div>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.cvPhoto) }}
+                {{ form_widget(form.cvPhoto, {'attr': {'class': 'form-control'}}) }}
+                <div class="form-text">Optionnel. Cette photo sera ajoutée au PDF généré (version améliorée).</div>
+                <div class="text-danger small">{{ form_errors(form.cvPhoto) }}</div>
             </div>
 
             <div class="mb-3">
@@ -48,3 +55,4 @@
     </div>
 </div>
 {% endblock %}
+

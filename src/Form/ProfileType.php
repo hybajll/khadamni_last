@@ -6,12 +6,13 @@ use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\Length;
 
-class ProfileType extends AbstractType
+final class ProfileType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -32,6 +33,11 @@ class ProfileType extends AbstractType
                         'mimeTypesMessage' => 'Veuillez uploader une image (JPG, PNG ou WEBP).',
                     ]),
                 ],
+            ])
+            ->add('phone', TelType::class, [
+                'label' => 'Numéro de téléphone',
+                'required' => false,
+                'attr' => ['class' => 'form-control', 'placeholder' => '+216 XX XXX XXX'],
             ])
             ->add('plainPassword', PasswordType::class, [
                 'label' => 'Nouveau mot de passe (laisser vide pour garder l\'actuel)',
@@ -54,3 +60,4 @@ class ProfileType extends AbstractType
         ]);
     }
 }
+

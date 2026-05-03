@@ -6,10 +6,21 @@
 <div class="container py-4">
     <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
         <h1 class="h4 mb-1 text-darken">Mon CV</h1>
-        <p class="text-muted mb-0">Importez / modifiez votre CV, puis cliquez sur “Améliorer avec IA”.</p>
+        <p class="text-muted mb-0">Importez / modifiez votre CV, puis cliquez sur “Améliorer”.</p>
     </div>
 
     {% if cv %}
+        {% set has_arabic = cv.contenuOriginal matches '/\\p{Arabic}/u' %}
+        {% if has_arabic and not mpdf_available %}
+            <div class="alert alert-warning border">
+                <div class="fw-semibold">PDF عربية: تنبيه</div>
+                <div class="small text-muted mt-1">
+                    حالياً توليد الـ PDF يستعمل Dompdf، وكتابة العربية قد تظهر غير واضحة.
+                    للحل: فعل PHP extension <code>gd</code> ثم ثبت <code>mpdf/mpdf</code>، وسنستعمله تلقائياً.
+                </div>
+            </div>
+        {% endif %}
+
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card">
@@ -17,7 +28,7 @@
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
                                 <div class="h5 mb-1">{{ cv.titre }}</div>
-                                <div class="text-muted small">Mis à jour: {{ cv.dateUpload|date('d/m/Y H:i') }}</div>
+                                <div class="text-muted small">Mis à jour : {{ cv.dateUpload|date('d/m/Y H:i') }}</div>
                             </div>
                             <div class="text-end">
                                 <div class="small text-muted">Améliorations</div>
@@ -28,8 +39,12 @@
                         {% if cv.pdfPath %}
                             <div class="mt-3">
                                 <a class="btn btn-light border" href="{{ asset(cv.pdfPath) }}" target="_blank" rel="noopener">
-                                    <i class="fa-regular fa-file-pdf me-2"></i>Télécharger le PDF importé
+                                    <i class="fa-regular fa-file-pdf me-2"></i>Voir le PDF importé (original)
                                 </a>
+                                <div class="text-muted small mt-2">
+                                    Ce PDF est celui que vous avez importé. Pour télécharger la dernière version (améliorée/traduite),
+                                    utilisez le bouton “Télécharger le PDF”.
+                                </div>
                             </div>
                         {% endif %}
 
@@ -40,7 +55,7 @@
 
                         {% if cv.conseilsAi %}
                             <div class="mt-4">
-                                <h2 class="h6 text-uppercase text-muted">Conseils IA (séparés du CV)</h2>
+                                <h2 class="h6 text-uppercase text-muted">Conseils (séparés du CV)</h2>
                                 <div class="bg-white border rounded-3 p-3" style="white-space: pre-wrap;">{{ cv.conseilsAi }}</div>
                             </div>
                         {% endif %}
@@ -70,8 +85,16 @@
 
                         <form method="POST" action="{{ path('app_cv_improve') }}" class="mb-2">
                             <input type="hidden" name="_token" value="{{ csrf_token('improve_cv') }}">
+                            <div class="mb-2">
+                                <label class="form-label small text-muted mb-1">Langue du CV (optionnel)</label>
+                                <select name="target_lang" class="form-select">
+                                    <option value="auto" selected>Garder la même langue</option>
+                                    <option value="fr">Français</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Améliorer avec IA
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Améliorer
                             </button>
                         </form>
 

@@ -1,7 +1,6 @@
-<<<<<<< HEAD
-body {
-    background-color: skyblue;
-}
-=======
-/* Khadamni: minimal custom CSS (Bootstrap is used for layout) */
->>>>>>> origin/main
+/* Khadamni custom CSS
+ *
+ * Most styling currently lives inline in templates/base.html.twig to keep setup simple.
+ * This file exists to avoid merge-conflict markers breaking future builds.
+ */
+

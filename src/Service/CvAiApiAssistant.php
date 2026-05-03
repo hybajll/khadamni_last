@@ -9,24 +9,26 @@ final class CvAiApiAssistant
     ) {
     }
 
-    public function improveAndAdvise(string $originalText): CvAiResult
+    /**
+     * @param ?string $targetLang null = keep original language, otherwise: fr|en
+     */
+    public function improveAndAdvise(string $originalText, ?string $targetLang = null): CvAiResult
     {
         $clean = trim($originalText);
         if ($clean === '') {
             return new CvAiResult('', '');
         }
 
-        // If the API key is not configured, keep a strict local fallback.
         try {
-            return $this->improveWithApi($clean);
-        } catch (\Throwable $e) {
-            return $this->improveLocally($clean);
+            return $this->improveWithApi($clean, $targetLang);
+        } catch (\Throwable) {
+            return $this->improveLocally($clean, $targetLang);
         }
     }
 
-    private function improveWithApi(string $cvText): CvAiResult
+    private function improveWithApi(string $cvText, ?string $targetLang): CvAiResult
     {
-        $prompt = $this->buildPrompt($cvText);
+        $prompt = $this->buildPrompt($cvText, $targetLang);
 
         $schema = [
             'type' => 'object',
@@ -40,7 +42,6 @@ final class CvAiApiAssistant
             'required' => ['improved_cv', 'advice', 'detected_skills', 'strengths'],
         ];
 
-        // Ask the model to output JSON matching the schema. (We parse JSON ourselves for portability.)
         $jsonText = $this->llmFactory->client()->generateText(
             $prompt."\n\nJSON Schema:\n".json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
@@ -77,9 +78,8 @@ final class CvAiApiAssistant
         return new CvAiResult($improved, implode("\n\n", $adviceParts));
     }
 
-    private function improveLocally(string $cvText): CvAiResult
+    private function improveLocally(string $cvText, ?string $targetLang): CvAiResult
     {
-        // Strict fallback: no invented content, only cleaning + formatting.
         $clean = str_replace(["\r\n", "\r"], "\n", $cvText);
         $clean = preg_replace("/\n{3,}/", "\n\n", $clean) ?? $clean;
 
@@ -90,13 +90,21 @@ final class CvAiApiAssistant
         $improved = "CONTENU\n".implode("\n", array_map(static fn (string $i): string => '- '.$i, $items));
 
         $advice = "- Conseil : ajoutez des dates et des chiffres (durée, outils, résultats) si possible.";
+        if ($targetLang !== null) {
+            $advice .= "\n- Note : la traduction est disponible uniquement quand l’API IA est accessible.";
+        }
 
         return new CvAiResult(trim($improved), $advice);
     }
 
-    private function buildPrompt(string $cvText): string
+    private function buildPrompt(string $cvText, ?string $targetLang): string
     {
         $languageHint = $this->detectLanguageHint($cvText);
+        $target = $targetLang ? strtoupper($targetLang) : 'SAME_AS_ORIGINAL';
+
+        $translationRules = $targetLang === null
+            ? "Keep the SAME language(s) as the original CV. Do NOT translate."
+            : "Rewrite and translate the CV into the target language: {$target}. Keep it consistent (French OR English only).";
 
         return <<<PROMPT
 You are an AI assistant specialized in CV analysis and optimization.
@@ -106,8 +114,8 @@ Your task is to improve and restructure a CV while strictly respecting the follo
 2. You MUST NOT invent experiences, skills, or achievements.
 3. You MUST only reformulate, correct, and structure the existing content.
 4. Improve grammar, clarity, and professional tone.
-5. Organize the CV into clear sections appropriate to the CV language (e.g. Profil / Profile / الملخص, Formation / Education / التعليم, etc.).
-6. Highlight the strengths of the candidate based only on the provided content.
+5. Organize the CV into clear sections (Profile, Education, Experience, Skills, Projects, etc.) in the CV language.
+6. Highlight strengths based only on the provided content.
 7. Use concise and impactful language suitable for recruiters.
 
 Additionally:
@@ -115,27 +123,23 @@ Additionally:
 * Identify strong points and suggest better phrasing.
 * Keep the content truthful and realistic.
 
-Language hint (for you): {$languageHint}
+Language hint: {$languageHint}
+Target language: {$target}
 
 Output requirements:
 * Return ONLY valid JSON that matches the provided JSON schema. No markdown, no code fences.
 * The field "improved_cv" must contain ONLY the improved CV (no explanations).
 * Put advice/suggestions into "advice", and lists into the other fields.
-* Keep the SAME language(s) as the original CV. Do NOT translate. Do not switch the CV to English/French/Arabic.
-* If the original CV is Arabic: output Arabic. If it's French: output French. If it's mixed: keep it mixed.
-* Use section titles in the SAME language as the CV. Do not invent section content.
-* Reuse the candidate’s original wording where possible (do not paraphrase into another language).
+* {$translationRules}
+* If target language is French: output French and use French section titles.
+* If target language is English: output English and use English section titles.
+* Do not invent any information, even while translating.
 * Formatting for improved_cv (plain text):
-  - Use clear section titles on their own line (e.g. "Profil", "Expérience", "Compétences", or Arabic equivalents).
-  - Use short bullet points starting with "- " (dash + space).
-  - Avoid long paragraphs. Convert sentences into 2–4 concise bullets per section.
-  - In "Profil"/"Résumé": maximum 4 bullets.
-  - Keep the layout clean and recruiter-friendly.
-
-IMPORTANT (repeat):
-- DO NOT TRANSLATE ANYTHING.
-- NE TRADUISEZ PAS LE CV.
-- لا تقم بالترجمة.
+  - Use clear section titles on their own line.
+  - Use bullet points starting with "- " (dash + space).
+  - Avoid long paragraphs.
+  - In "Profile"/"Profil"/Arabic summary: maximum 4 bullets.
+  - Keep layout clean and recruiter-friendly.
 
 Here is the CV content:
 {$cvText}

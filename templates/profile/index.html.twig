@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="p-4 rounded-4 bg-cream shadow-sm">
                 <h1 class="mb-2 text-darken">Mon Profil</h1>
-                <p class="text-muted mb-0">Vous pouvez modifier votre photo et votre mot de passe.</p>
+                <p class="text-muted mb-0">Vous pouvez modifier votre téléphone, votre photo et votre mot de passe.</p>
             </div>
         </div>
     </div>
@@ -51,21 +51,28 @@
                             <p><strong>Email :</strong> {{ user.email }}</p>
                         </div>
                         <div class="col-sm-6">
+                            <p><strong>Téléphone :</strong> {{ user.phone ?: '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
                             <p><strong>Type :</strong>
                                 {% if user.type == 'etudiant' %}Étudiant
                                 {% elseif user.type == 'diplome' %}Diplômé
                                 {% else %}Administrateur{% endif %}
                             </p>
                         </div>
+                        <div class="col-sm-6">
+                            <p><strong>Statut :</strong> {{ user.active ? 'Actif' : 'Inactif' }}</p>
+                        </div>
                     </div>
 
                     <div class="row">
                         <div class="col-sm-6">
-                            <p><strong>Statut :</strong> {{ user.active ? 'Actif' : 'Inactif' }}</p>
-                        </div>
-                        <div class="col-sm-6">
                             <p><strong>Inscrit le :</strong> {{ user.localDateTime ? user.localDateTime|date('d/m/Y H:i') : 'N/A' }}</p>
                         </div>
+                        <div class="col-sm-6"></div>
                     </div>
                 </div>
             </div>
@@ -89,3 +96,4 @@
     </div>
 </div>
 {% endblock %}
+

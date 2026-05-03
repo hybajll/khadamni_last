@@ -6,7 +6,7 @@
 <div class="container py-4">
     <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
         <h1 class="h4 mb-1 text-darken">Modifier mon profil</h1>
-        <p class="text-muted mb-0">Vous pouvez modifier uniquement votre mot de passe et votre photo.</p>
+        <p class="text-muted mb-0">Vous pouvez modifier votre téléphone, votre mot de passe et votre photo.</p>
         <nav aria-label="breadcrumb" class="mt-3">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ path('app_user_home') }}">Accueil</a></li>
@@ -49,6 +49,10 @@
                             <div class="col-md-4"><span class="text-muted">Prénom :</span> <strong>{{ app.user.prenom ?: '-' }}</strong></div>
                             <div class="col-md-4"><span class="text-muted">Email :</span> <strong>{{ app.user.email }}</strong></div>
                         </div>
+                    </div>
+
+                    <div class="mt-3">
+                        {{ form_row(form.phone, {attr: {class: 'form-control'}}) }}
                     </div>
 
                     <div class="mt-3">

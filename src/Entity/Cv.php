@@ -48,6 +48,9 @@ class Cv
     #[ORM\Column(name: 'pdfPath', length: 255, nullable: true)]
     private ?string $pdfPath = null;
 
+    #[ORM\Column(name: 'cvPhotoPath', length: 255, nullable: true)]
+    private ?string $cvPhotoPath = null;
+
     /**
      * Relation avec l'utilisateur. 
      * La colonne SQL s'appelle 'idUser' selon ta base.
@@ -84,6 +87,9 @@ class Cv
 
     public function getPdfPath(): ?string { return $this->pdfPath; }
     public function setPdfPath(?string $pdfPath): self { $this->pdfPath = $pdfPath; return $this; }
+
+    public function getCvPhotoPath(): ?string { return $this->cvPhotoPath; }
+    public function setCvPhotoPath(?string $cvPhotoPath): self { $this->cvPhotoPath = $cvPhotoPath; return $this; }
 
     public function getUser(): ?User { return $this->user; }
     public function setUser(?User $user): self { $this->user = $user; return $this; }

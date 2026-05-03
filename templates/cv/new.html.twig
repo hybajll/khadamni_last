@@ -6,7 +6,7 @@
 <div class="container py-4">
     <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
         <h1 class="h4 mb-1 text-darken">Créer un CV</h1>
-        <p class="text-muted mb-0">Importez un PDF ou collez votre CV en texte, puis améliorez-le avec l’IA (simulation).</p>
+        <p class="text-muted mb-0">Importez un PDF ou collez votre CV en texte, puis améliorez-le avec l’IA.</p>
     </div>
 
     <div class="card">
@@ -24,6 +24,13 @@
                 {{ form_widget(form.cvPdf, {'attr': {'class': 'form-control'}}) }}
                 <div class="form-text">PDF uniquement. Si vous importez un PDF, on tentera d’extraire le texte automatiquement.</div>
                 <div class="text-danger small">{{ form_errors(form.cvPdf) }}</div>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.cvPhoto) }}
+                {{ form_widget(form.cvPhoto, {'attr': {'class': 'form-control'}}) }}
+                <div class="form-text">Optionnel. Cette photo sera ajoutée au PDF généré (version améliorée).</div>
+                <div class="text-danger small">{{ form_errors(form.cvPhoto) }}</div>
             </div>
 
             <div class="mb-3">
@@ -49,3 +56,4 @@
     </div>
 </div>
 {% endblock %}
+
