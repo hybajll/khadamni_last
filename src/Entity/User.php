@@ -20,9 +20,6 @@ use Symfony\Component\Validator\Constraints as Assert;
     'etudiant' => Etudiant::class,
     'diplome' => Diplome::class,
     'admin' => Admin::class,
-    'ETUDIANT' => Etudiant::class,
-    'DIPLOME' => Diplome::class,
-    'ADMIN' => Admin::class,
 ])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -53,6 +50,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank(message: "L'email est obligatoire.")]
     #[Assert\Email(message: "L'adresse email n'est pas valide.")]
     protected ?string $email = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Regex(
+        pattern: '/^[\d\s\-\+\(\)]+$/',
+        message: 'Le numero de telephone n\'est pas valide.'
+    )]
+    protected ?string $phone = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.', groups: ['user_password'])]
@@ -88,6 +92,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->reclamations = new ArrayCollection();
     }
+
+    // ================= GETTERS / SETTERS =================
 
     public function getId(): ?int
     {
@@ -127,6 +133,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
+        return $this;
+    }
+
     public function getPassword(): ?string
     {
         return $this->password;
@@ -149,16 +166,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isActif(): bool
-    {
-        return $this->isActive();
-    }
-
-    public function setActif(bool $actif): self
-    {
-        return $this->setIsActive($actif);
-    }
-
     public function getLocalDateTime(): ?\DateTimeInterface
     {
         return $this->localDateTime;
@@ -179,16 +186,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->adminRole = $adminRole;
         return $this;
-    }
-
-    public function getRole(): ?string
-    {
-        return $this->getAdminRole();
-    }
-
-    public function setRole(?string $role): self
-    {
-        return $this->setAdminRole($role);
     }
 
     public function getAvatarPath(): ?string
@@ -233,28 +230,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isSubscriptionActive(?\DateTimeImmutable $now = null): bool
     {
         $now = $now ?? new \DateTimeImmutable();
-        return $this->subscriptionEndDate instanceof \DateTimeImmutable && $this->subscriptionEndDate > $now;
+        return $this->subscriptionEndDate instanceof \DateTimeImmutable
+            && $this->subscriptionEndDate > $now;
     }
 
-    public function getType(): string
+    // ================= SECURITY =================
+
+    public function getUserIdentifier(): string
     {
-        if ($this instanceof Admin) {
-            return self::TYPE_ADMIN;
-        }
-        if ($this instanceof Diplome) {
-            return self::TYPE_DIPLOME;
-        }
-        return self::TYPE_ETUDIANT;
+        return (string) $this->email;
     }
 
     public function getUsername(): string
     {
         return $this->getUserIdentifier();
-    }
-
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->email;
     }
 
     public function getRoles(): array
@@ -266,19 +255,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $adminRole = $this->getAdminRole();
+
         if ($adminRole) {
             $normalized = strtoupper(trim($adminRole));
+
             $roles[] = match ($normalized) {
-                'SUPERADMIN' => 'ROLE_SUPERADMIN',
-                'MODERATOR'  => 'ROLE_MODERATOR',
-                'MANAGER'    => 'ROLE_MANAGER',
+                'SUPERADMIN',
+                'SUPER_ADMIN',
+                'SUPER-ADMIN',
+                'SUPER ADMIN',
+                'SUPER_ADMINISTRATEUR',
+                'SUPERADMINISTRATEUR' => 'ROLE_SUPERADMIN',
 
-                // ✅ SUPER_ADMIN en double supprimé
-                'SUPER_ADMIN', 'SUPER-ADMIN', 'SUPER ADMIN',
-                'SUPER_ADMINISTRATEUR', 'SUPERADMINISTRATEUR' => 'ROLE_SUPERADMIN',
+                'MODERATOR',
+                'MODERATEUR' => 'ROLE_MODERATOR',
 
+                'MANAGER',
                 'GESTIONNAIRE' => 'ROLE_MANAGER',
-                'MODERATEUR'   => 'ROLE_MODERATOR',
 
                 default => $normalized,
             };
@@ -286,6 +279,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return array_unique($roles);
     }
+
+    public function eraseCredentials(): void {}
+
+    // ================= RELATIONS =================
 
     /**
      * @return Collection<int, Reclamation>
@@ -301,6 +298,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->reclamations->add($reclamation);
             $reclamation->setUser($this);
         }
+
         return $this;
     }
 
@@ -311,11 +309,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $reclamation->setUser(null);
             }
         }
+
         return $this;
     }
 
-    public function eraseCredentials(): void
+    // ================= TYPE =================
+
+    public function getType(): string
     {
-        // Nettoyage des données sensibles temporaires si nécessaire
+        if ($this instanceof Admin) {
+            return self::TYPE_ADMIN;
+        }
+        if ($this instanceof Diplome) {
+            return self::TYPE_DIPLOME;
+        }
+        return self::TYPE_ETUDIANT;
+    }
+
+    public function isActif(): bool
+    {
+        return $this->isActive();
+    }
+
+    public function setActif(bool $actif): self
+    {
+        return $this->setIsActive($actif);
     }
 }

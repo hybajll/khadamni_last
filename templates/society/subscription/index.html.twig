@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Abonnement Entreprise - Khadamni{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
+        <h1 class="h4 mb-1 text-darken">Abonnement Entreprise</h1>
+        <p class="text-muted mb-0">1 publication gratuite, puis abonnement pour continuer.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Votre statut</h2>
+
+                    {% if subscribed %}
+                        <div class="alert alert-success">
+                            Abonnement actif jusqu'au <strong>{{ end_date|date('d/m/Y') }}</strong>.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            Vous n'êtes pas abonné.
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-light border">
+                            Publications gratuites restantes : <strong>{{ remaining }}</strong> / 1
+                        </span>
+                        {% if subscribed %}
+                            <span class="badge text-bg-success">Publication illimitée</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">Accès limité</span>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h2 class="h6 text-uppercase text-muted">Offre mensuelle</h2>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">Abonnement 1 mois</div>
+                            <div class="text-muted small">Publication illimitée pendant la période.</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="h4 mb-0 text-orange">{{ price }} {{ currency }}</div>
+                            <div class="text-muted small">par mois</div>
+                        </div>
+                    </div>
+
+                    {% if not subscribed %}
+                        <a class="btn btn-primary btn-lg w-100 mt-4" href="{{ path('society_payment_start') }}">
+                            <i class="fa-solid fa-lock-open me-2"></i>Payer et activer l'abonnement
+                        </a>
+                    {% else %}
+                        <div class="alert alert-light border mt-4 mb-0">
+                            Votre abonnement est déjà actif. Vous pouvez publier des offres sans limite.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Pourquoi s'abonner ?</h2>
+                    <ul class="mb-0 ps-3">
+                        <li>Publication illimitée d'offres</li>
+                        <li>Accès complet après 1 publication gratuite</li>
+                    </ul>
+
+                    <hr class="my-4">
+                    <div class="text-muted small">
+                        Note : paiement simulé (projet académique).
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ path('society_dashboard') }}" class="btn btn-secondary w-100 mt-3">Retour</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

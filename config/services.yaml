@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
 # This file is the entry point to configure your own services.
@@ -21,3 +22,60 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+=======
+# config/services.yaml
+
+parameters:
+    cv_directory: '%kernel.project_dir%/public/uploads/cvs'
+
+    # Parameters from .env/.env.local
+    app.motivational_video_embed_url: '%env(string:MOTIVATIONAL_VIDEO_EMBED_URL)%'
+    app.motivational_video_path: '%env(string:MOTIVATIONAL_VIDEO_PATH)%'
+
+    app.openai_api_key: '%env(string:OPENAI_API_KEY)%'
+    app.openai_model: '%env(string:OPENAI_MODEL)%'
+
+    app.ai_provider: '%env(string:AI_PROVIDER)%'
+
+    app.openrouter_api_key: '%env(string:OPENROUTER_API_KEY)%'
+    app.openrouter_model: '%env(string:OPENROUTER_MODEL)%'
+
+    app.gemini_api_key: '%env(string:GEMINI_API_KEY)%'
+    app.gemini_model: '%env(string:GEMINI_MODEL)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            $provider: '%app.ai_provider%'
+            $geminiApiKey: '%app.gemini_api_key%'
+            $geminiModel: '%app.gemini_model%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # --- IA clients: explicit string args (avoid DI errors) ---
+    App\Service\OpenAiResponsesClient:
+        arguments:
+            $apiKey: '%app.openai_api_key%'
+            $model: '%app.openai_model%'
+
+    App\Service\OpenRouterChatClient:
+        arguments:
+            $apiKey: '%app.openrouter_api_key%'
+            $model: '%app.openrouter_model%'
+
+    App\Service\GeminiGenerateContentClient:
+        arguments:
+            $apiKey: '%app.gemini_api_key%'
+            $model: '%app.gemini_model%'
+
+    App\Service\LlmClientFactory:
+        arguments:
+            $provider: '%app.ai_provider%'
+>>>>>>> 99de4081c485d35108cfc6223ee27fd1f566d5e9

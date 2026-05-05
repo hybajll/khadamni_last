@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}خدمني — Accueil{% endblock %}
+
+{% block main_container_open %}<div class="container-fluid px-0">{% endblock %}
+{% block main_container_close %}</div>{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .landing-hero {
+            position: relative;
+            background: radial-gradient(1200px 500px at 20% 10%, rgba(255, 140, 0, 0.18), transparent 60%),
+                        radial-gradient(900px 420px at 80% 35%, rgba(255, 255, 255, 0.22), transparent 55%),
+                        linear-gradient(135deg, var(--kh-navy) 0%, #0d2b52 55%, #081b32 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .landing-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+            background-size: 18px 18px;
+            opacity: 0.35;
+            pointer-events: none;
+            transform: translateZ(0);
+        }
+
+        .landing-hero-inner {
+            position: relative;
+            z-index: 1;
+            padding: 72px 0 54px;
+        }
+
+        .hero-brand {
+            font-family: 'Cairo', sans-serif;
+            letter-spacing: 0.02em;
+            font-weight: 800;
+        }
+
+        .hero-brand .name {
+            font-size: clamp(2.1rem, 4.2vw, 3.3rem);
+            line-height: 1.05;
+            color: #fff;
+        }
+
+        .hero-brand .tagline {
+            margin-top: 8px;
+            font-size: 1.05rem;
+            opacity: 0.92;
+        }
+
+        .hero-copy {
+            max-width: 44ch;
+            margin-top: 14px;
+            opacity: 0.9;
+        }
+
+        .hero-actions .btn {
+            border-radius: 999px;
+            padding: 0.9rem 1.2rem;
+            font-weight: 700;
+        }
+
+        .btn-hero-secondary {
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.28);
+            color: #fff;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255,255,255,0.16);
+            border-color: rgba(255,255,255,0.38);
+            color: #fff;
+        }
+
+        .hero-fade-up {
+            animation: fadeUp 700ms ease-out both;
+        }
+        .hero-fade-up.delay-1 { animation-delay: 70ms; }
+        .hero-fade-up.delay-2 { animation-delay: 140ms; }
+        .hero-fade-up.delay-3 { animation-delay: 210ms; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .offers-section {
+            padding: 42px 0 10px;
+        }
+
+        .offer-row {
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            padding: 16px 0;
+        }
+
+        .offer-row:last-child {
+            border-bottom: none;
+        }
+
+        .offer-meta {
+            color: rgba(15, 23, 42, 0.66);
+            font-size: 0.92rem;
+        }
+
+        .offer-title {
+            font-weight: 800;
+            margin: 0;
+            color: var(--kh-text);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 140, 0, 0.12);
+            color: #7a3f00;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 140, 0, 0.22);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="landing-hero">
+        <div class="container">
+            <div class="landing-hero-inner">
+                <div class="row align-items-center gy-4">
+                    <div class="col-lg-7">
+                        <div class="hero-brand text-lg-start text-center hero-fade-up delay-1" dir="rtl">
+                            <div class="name">خدمني</div>
+                            <div class="tagline">خدمتك معانا مضمونة</div>
+                        </div>
+                        <p class="hero-copy text-lg-start text-center hero-fade-up delay-2">
+                            اكتشف آخر العروض، حسّن سيرتك الذاتية بالذكاء الاصطناعي، وقدّم بثقة.
+                        </p>
+
+                        <div class="hero-actions d-flex flex-column flex-sm-row justify-content-lg-start justify-content-center gap-2 mt-3 hero-fade-up delay-3">
+                            <a class="btn btn-primary" href="{{ path('app_login') }}">
+                                أنا مرشّح (تسجيل الدخول)
+                            </a>
+                            <a class="btn btn-hero-secondary" href="{{ path('society_login') }}">
+                                أنا شركة (نشر عرض)
+                            </a>
+                        </div>
+
+                        <div class="mt-3 text-lg-start text-center">
+                            <a href="#latest-offers" class="text-white-50 text-decoration-none">
+                                <i class="fa-solid fa-arrow-down me-2"></i>تصفّح آخر العروض
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="text-center text-lg-end hero-fade-up delay-2">
+                            <span class="pill"><i class="fa-solid fa-bolt"></i> منصة بسيطة وسريعة</span>
+                        </div>
+                        <div class="mt-3 text-white-50 text-center text-lg-end">
+                            CV جاهز • نصائح واضحة • تجربة سلسة
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="latest-offers" class="offers-section">
+        <div class="container">
+            <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h4 mb-1 fw-bold text-darken">Dernières offres</h2>
+                    <div class="text-muted">Cliquez sur une offre pour voir le détail. Pour postuler, connexion candidat.</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-primary" href="{{ path('app_register') }}">Créer un compte candidat</a>
+                    <a class="btn btn-outline-primary" href="{{ path('society_register') }}">Créer un compte entreprise</a>
+                </div>
+            </div>
+
+            {% if offers is empty %}
+                <div class="bg-white rounded-4 p-4 shadow-sm">
+                    <div class="text-muted">Aucune offre active pour le moment.</div>
+                </div>
+            {% else %}
+                <div class="bg-white rounded-4 p-4 shadow-sm">
+                    {% for offer in offers %}
+                        <div class="offer-row">
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div class="flex-grow-1">
+                                    <h3 class="offer-title h6">
+                                        <a class="text-decoration-none text-darken" href="{{ path('app_offer_public_show', {id: offer.id}) }}">
+                                            {{ offer.title }}
+                                        </a>
+                                    </h3>
+                                    <div class="offer-meta mt-1">
+                                        {{ offer.society.name }}
+                                        {% if offer.location %} • {{ offer.location }}{% endif %}
+                                        {% if offer.contractType %} • {{ offer.contractType }}{% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-nowrap">
+                                    <a class="btn btn-sm btn-primary" href="{{ path('app_offer_public_show', {id: offer.id}) }}">Voir</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
+

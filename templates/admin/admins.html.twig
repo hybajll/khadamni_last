@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Admins{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h4 mb-1 text-darken">Administrateurs</h1>
+            <div class="text-muted">Liste des admins + ajout manuel.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="get" class="d-flex gap-2" action="{{ path('app_admin_admins') }}">
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ q|default('') }}"
+                    class="form-control"
+                    placeholder="Rechercher (email, rôle)"
+                >
+                <button class="btn btn-primary" type="submit">Rechercher</button>
+                {% if q is defined and q is not empty %}
+                    <a class="btn btn-light border" href="{{ path('app_admin_admins') }}">Reset</a>
+                {% endif %}
+            </form>
+            <a href="{{ path('app_admin_admins_new') }}" class="btn btn-primary">Ajouter un admin</a>
+            {# Assure-toi que cette route existe, sinon change par app_admin_admins #}
+            <a href="{{ path('app_admin_admins') }}" class="btn btn-secondary">Retour</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in admins %}
+                            {# Sécurité : on vérifie que 'a' existe bien #}
+                            {% if a is not null %}
+                                <tr>
+                                    <td>{{ a.id }}</td>
+                                    <td>{{ a.email }}</td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">{{ a.adminRole ?: 'AUCUN' }}</span>
+                                    </td>
+                                    <td>
+                                        {# Adaptation selon ton entité (isActif ou isActive) #}
+                                        {% if a.actif or a.isActive|default(false) %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ path('app_admin_edit', {'id': a.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                                            
+                                            <form method="post" action="{{ path('app_admin_delete', {'id': a.id}) }}" onsubmit="return confirm('Supprimer cet admin ?');" style="display:inline-block">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_admin_' ~ a.id) }}">
+                                                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Aucun administrateur trouvé.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

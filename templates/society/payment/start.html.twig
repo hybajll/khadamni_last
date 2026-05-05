@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Paiement Entreprise (simulation) - Khadamni{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
+        <h1 class="h4 mb-1 text-darken">Paiement Entreprise</h1>
+        <p class="text-muted mb-0">Projet académique : paiement <strong>simulé</strong>. Après validation, l'abonnement devient actif.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <div class="text-muted small">Abonnement mensuel entreprise</div>
+                            <div class="fw-semibold">Publication illimitée (1 mois)</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="h4 mb-0 text-orange">{{ price }} {{ currency }}</div>
+                            <div class="text-muted small">TTC</div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('society_payment_start') }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Moyen de paiement</label>
+                            <select name="method" class="form-select" required>
+                                <option value="card" selected>Carte bancaire (simulation)</option>
+                                <option value="d17">D17 / Mobile (simulation)</option>
+                                <option value="transfer">Virement bancaire (simulation)</option>
+                            </select>
+                            <div class="form-text">Choix fictif pour un projet académique.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Numéro de carte</label>
+                                <input class="form-control" placeholder="1111 2222 3333 4444" inputmode="numeric">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Expiration</label>
+                                <input class="form-control" placeholder="MM/AA" inputmode="numeric">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">CVV</label>
+                                <input class="form-control" placeholder="123" inputmode="numeric">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Nom sur la carte</label>
+                                <input class="form-control" placeholder="Nom de l'entreprise">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning mt-4 mb-0">
+                            <strong>Important :</strong> aucune transaction réelle n'est effectuée. Les champs ci-dessus ne sont pas envoyés à une banque.
+                        </div>
+
+                        <button class="btn btn-primary btn-lg w-100 mt-3" type="submit">
+                            Valider et activer l'abonnement
+                        </button>
+                        <a href="{{ path('society_subscription') }}" class="btn btn-light border w-100 mt-2">Retour</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">Après paiement</h2>
+                    <ul class="mb-0 ps-3">
+                        <li>Publication illimitée pendant 1 mois</li>
+                        <li>Plus de blocage après la publication gratuite</li>
+                        <li>Statut visible sur “Abonnement Entreprise”</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

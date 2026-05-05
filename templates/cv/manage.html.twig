@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon CV{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="rounded-4 bg-cream shadow-sm p-4 mb-4">
+        <h1 class="h4 mb-1 text-darken">Mon CV</h1>
+        <p class="text-muted mb-0">Importez / modifiez votre CV, puis cliquez sur “Améliorer”.</p>
+    </div>
+
+    {% if cv %}
+        {% set has_arabic = cv.contenuOriginal matches '/\\p{Arabic}/u' %}
+        {% if has_arabic and not mpdf_available %}
+            <div class="alert alert-warning border">
+                <div class="fw-semibold">PDF عربية: تنبيه</div>
+                <div class="small text-muted mt-1">
+                    حالياً توليد الـ PDF يستعمل Dompdf، وكتابة العربية قد تظهر غير واضحة.
+                    للحل: فعل PHP extension <code>gd</code> ثم ثبت <code>mpdf/mpdf</code>، وسنستعمله تلقائياً.
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="h5 mb-1">{{ cv.titre }}</div>
+                                <div class="text-muted small">Mis à jour : {{ cv.dateUpload|date('d/m/Y H:i') }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="small text-muted">Améliorations</div>
+                                <div class="fw-semibold">{{ cv.nombreAmeliorations }}</div>
+                            </div>
+                        </div>
+
+                        {% if cv.pdfPath %}
+                            <div class="mt-3">
+                                <a class="btn btn-light border" href="{{ asset(cv.pdfPath) }}" target="_blank" rel="noopener">
+                                    <i class="fa-regular fa-file-pdf me-2"></i>Voir le PDF importé (original)
+                                </a>
+                                <div class="text-muted small mt-2">
+                                    Ce PDF est celui que vous avez importé. Pour télécharger la dernière version (améliorée/traduite),
+                                    utilisez le bouton “Télécharger le PDF”.
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <hr class="my-4">
+
+                        <h2 class="h6 text-uppercase text-muted">Dernière version</h2>
+                        <div class="bg-white border rounded-3 p-3" style="white-space: pre-wrap;">{{ cv.contenuOriginal }}</div>
+
+                        {% if cv.conseilsAi %}
+                            <div class="mt-4">
+                                <h2 class="h6 text-uppercase text-muted">Conseils (séparés du CV)</h2>
+                                <div class="bg-white border rounded-3 p-3" style="white-space: pre-wrap;">{{ cv.conseilsAi }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="fw-semibold mb-3">Actions</div>
+
+                        <div class="alert alert-light border small mb-3">
+                            <div class="fw-semibold">Actions gratuites</div>
+                            {% set remaining = 2 - (app.user.freeUsageCount ?? 0) %}
+                            <div>Il vous reste <strong>{{ remaining > 0 ? remaining : 0 }}</strong> action(s) gratuite(s).</div>
+                            <a class="text-decoration-none text-orange fw-semibold" href="{{ path('app_subscription') }}">Voir abonnement</a>
+                        </div>
+
+                        <a href="{{ path('app_cv_edit') }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fa-regular fa-pen-to-square me-2"></i>Modifier
+                        </a>
+
+                        <a href="{{ path('app_user_offers_recommended') }}" class="btn btn-light border w-100 mb-2">
+                            <i class="fa-solid fa-briefcase me-2"></i>Offres compatibles (CV)
+                        </a>
+
+                        <form method="POST" action="{{ path('app_cv_improve') }}" class="mb-2">
+                            <input type="hidden" name="_token" value="{{ csrf_token('improve_cv') }}">
+                            <div class="mb-2">
+                                <label class="form-label small text-muted mb-1">Langue du CV (optionnel)</label>
+                                <select name="target_lang" class="form-select">
+                                    <option value="auto" selected>Garder la même langue</option>
+                                    <option value="fr">Français</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Améliorer
+                            </button>
+                        </form>
+
+                        {% if cv.nombreAmeliorations and cv.nombreAmeliorations > 0 %}
+                            <a href="{{ path('app_cv_download_improved') }}" class="btn btn-light border w-100 mb-2">
+                                <i class="fa-regular fa-file-pdf me-2"></i>Télécharger le PDF (dernière version)
+                            </a>
+                        {% endif %}
+
+                        <a href="{{ path('app_user_home') }}" class="btn btn-secondary w-100">Retour</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <div class="fw-semibold">Aucun CV trouvé</div>
+            <div class="mt-1">Vous n’avez pas encore créé de CV.</div>
+            <div class="mt-3">
+                <a href="{{ path('app_cv_new') }}" class="btn btn-primary">Créer un CV</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

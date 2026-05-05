@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Candidature Envoyée - Khadamni{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0 text-center p-5" style="border-radius: 20px;">
+            <div class="card-body">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                </div>
+
+                <h1 class="display-5 fw-bold" style="color: var(--primary-blue);">Merci !</h1>
+                
+                <p class="lead text-muted mt-3">
+                    Votre candidature a été enregistrée avec succès. 
+                    Notre système d'analyse traite actuellement votre dossier.
+                </p>
+
+                <hr class="my-4 mx-auto" style="width: 50%; opacity: 0.2;">
+
+                <p class="small text-secondary mb-4">
+                    Un responsable de recrutement reviendra vers vous par email très prochainement.
+                </p>
+
+                <div class="d-grid gap-2 col-8 mx-auto">
+                    <a href="{{ path('app_candidature_new') }}" class="btn btn-primary btn-lg shadow-sm" style="background-color: var(--primary-blue); border: none; border-radius: 10px;">
+                        <i class="bi bi-arrow-left me-2"></i>RETOUR À L'ACCUEIL
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

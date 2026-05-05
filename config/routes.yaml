@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
 
 # This file is the entry point to configure the routes of your app.
@@ -9,3 +10,10 @@
 
 controllers:
     resource: routing.controllers
+=======
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+>>>>>>> 99de4081c485d35108cfc6223ee27fd1f566d5e9

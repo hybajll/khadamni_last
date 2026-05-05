@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Paiements & Abonnements{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h4 mb-1 text-darken">Paiements & Abonnements</h1>
+            <div class="text-muted">Espace manager (lecture). Suppression réservée au superadmin.</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <form method="get" class="d-flex gap-2" action="{{ path('app_admin_payments') }}">
+                <input type="search" name="q" value="{{ q|default('') }}" class="form-control" placeholder="Rechercher (email)">
+                <button class="btn btn-primary" type="submit">Rechercher</button>
+                {% if q|default('') %}
+                    <a class="btn btn-light border" href="{{ path('app_admin_payments') }}">Reset</a>
+                {% endif %}
+            </form>
+            <a href="{{ path('app_admin_dashboard') }}" class="btn btn-secondary">Retour</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="p-4 border-bottom">
+                        <h2 class="h6 text-uppercase text-muted mb-0">Paiements</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Référence</th>
+                                    <th>Créé</th>
+                                    {% if is_granted('ROLE_SUPERADMIN') %}<th class="text-end">Actions</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in payments %}
+                                    <tr>
+                                        <td>{{ p.id }}</td>
+                                        <td class="text-muted">{{ p.user ? p.user.email : '-' }}</td>
+                                        <td>{{ p.amount }} {{ p.currency }}</td>
+                                        <td>
+                                            {% if p.status == 'paid' %}
+                                                <span class="badge text-bg-success">paid</span>
+                                            {% elseif p.status == 'pending' %}
+                                                <span class="badge text-bg-warning">pending</span>
+                                            {% else %}
+                                                <span class="badge text-bg-secondary">{{ p.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted">{{ p.providerRef ?: '-' }}</td>
+                                        <td class="text-muted">{{ p.createdAt ? p.createdAt|date('d/m/Y H:i') : '-' }}</td>
+                                        {% if is_granted('ROLE_SUPERADMIN') %}
+                                            <td class="text-end">
+                                                <form method="post" action="{{ path('app_admin_payment_delete', {id: p.id}) }}" onsubmit="return confirm('Supprimer ce paiement ?');" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_payment_' ~ p.id) }}">
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                                </form>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="{{ is_granted('ROLE_SUPERADMIN') ? 7 : 6 }}" class="text-center text-muted py-4">Aucun paiement.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="p-4 border-bottom">
+                        <h2 class="h6 text-uppercase text-muted mb-0">Abonnements</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Début</th>
+                                    <th>Fin</th>
+                                    <th>Statut</th>
+                                    {% if is_granted('ROLE_SUPERADMIN') %}<th class="text-end">Actions</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in subscriptions %}
+                                    <tr>
+                                        <td>{{ s.id }}</td>
+                                        <td class="text-muted">{{ s.user ? s.user.email : '-' }}</td>
+                                        <td class="text-muted">{{ s.startAt ? s.startAt|date('d/m/Y') : '-' }}</td>
+                                        <td class="text-muted">{{ s.endAt ? s.endAt|date('d/m/Y') : '-' }}</td>
+                                        <td>
+                                            {% if s.status == 'active' %}
+                                                <span class="badge text-bg-success">active</span>
+                                            {% else %}
+                                                <span class="badge text-bg-secondary">{{ s.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        {% if is_granted('ROLE_SUPERADMIN') %}
+                                            <td class="text-end">
+                                                <form method="post" action="{{ path('app_admin_subscription_delete', {id: s.id}) }}" onsubmit="return confirm('Supprimer cet abonnement ?');" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_subscription_' ~ s.id) }}">
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                                </form>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="{{ is_granted('ROLE_SUPERADMIN') ? 6 : 5 }}" class="text-center text-muted py-4">Aucun abonnement.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

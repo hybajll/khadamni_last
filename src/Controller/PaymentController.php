@@ -14,11 +14,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/payment')]
 final class PaymentController extends AbstractController
 {
-    /**
-     * Academic / simulated payment:
-     * - Display a simple "payment form"
-     * - On submit: create a pending Payment row and immediately confirm it
-     */
     #[Route('/start', name: 'app_payment_start', methods: ['GET', 'POST'])]
     public function start(Request $request, SubscriptionService $subscriptionService, InAppNotificationService $inAppNotificationService): Response
     {
@@ -27,7 +22,6 @@ final class PaymentController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        // Already subscribed? Go back.
         if ($subscriptionService->isSubscribed($user)) {
             $this->addFlash('info', "Votre abonnement est déjà actif.");
             return $this->redirectToRoute('app_subscription');
@@ -55,4 +49,3 @@ final class PaymentController extends AbstractController
         ]);
     }
 }
-

@@ -79,18 +79,14 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
 
-    // Subscription + free usage for publishing offers (2 free publications)
     #[ORM\Column(name: 'freeUsageCount', type: 'integer')]
     private int $freeUsageCount = 0;
 
     #[ORM\Column(name: 'subscriptionEndDate', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $subscriptionEndDate = null;
 
-
-    
     #[ORM\OneToMany(mappedBy: 'Society', targetEntity: Reclamation::class)]
     private Collection $reclamations;
-
 
     /**
      * @var Collection<int, Offer>
@@ -280,21 +276,7 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRoles(): array
-    {
-        return ['ROLE_SOCIETY'];
-    }
-
-    public function eraseCredentials(): void
-    {
-    }
-
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->email;
-    }
-
-        /**
+    /**
      * @return Collection<int, Reclamation>
      */
     public function getReclamations(): Collection
@@ -319,5 +301,19 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_SOCIETY'];
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
     }
 }

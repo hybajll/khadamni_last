@@ -1,0 +1,50 @@
+{# templates/admin/reclamation/_row_table.html.twig #}
+<tr>
+    <td class="ps-3 fw-bold text-primary">#{{ rec.idReclamation }}</td>
+    <td>
+        {% if type == 'society' %}
+            {# Utilisation de .name pour Society #}
+            <div class="fw-bold text-dark">{{ rec.society.name|default('Société inconnue') }}</div>
+            <small class="text-muted"><i class="fas fa-industry me-1"></i>Entreprise</small>
+        {% else %}
+            {# Utilisation de .nom pour User #}
+            <div class="fw-bold text-dark">{{ rec.user.nom|default('Utilisateur') }} {{ rec.user.prenom|default('') }}</div>
+            <small class="text-muted"><i class="fas fa-user-circle me-1"></i>Particulier</small>
+        {% endif %}
+    </td>
+    <td>
+        <div class="text-truncate" style="max-width: 200px;" title="{{ rec.sujet }}">
+            {{ rec.sujet }}
+        </div>
+    </td>
+    <td>
+        <form action="{{ path('app_admin_reclamation_set_statut', {'id': rec.idReclamation}) }}" method="post">
+            {# La classe bg- change dynamiquement selon la valeur du statut (ex: bg-en_cours) #}
+            <select name="statut" onchange="this.form.submit()" 
+                    class="form-select form-select-sm select-statut bg-{{ rec.statut.value|default('secondary') }}">
+                {% for statut in statuts_disponibles %}
+                    <option value="{{ statut.value }}" {{ (rec.statut.value == statut.value) ? 'selected' : '' }}>
+                        {{ statut.name|replace({'_': ' '})|capitalize }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </td>
+    <td class="text-muted fs-7">
+        <i class="far fa-clock me-1"></i>{{ rec.dateCreation|date('d/m/Y H:i') }}
+    </td>
+    <td>
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="{{ path('app_admin_reclamation_edit', {'id': rec.idReclamation}) }}" class="btn btn-warning btn-sm text-white shadow-sm">
+                <i class="fas fa-edit"></i>
+            </a>
+            <a href="{{ path('app_admin_reclamation_chat', {'id': rec.idReclamation}) }}" class="btn btn-info btn-sm text-white shadow-sm">
+                <i class="fas fa-comments"></i>
+            </a>
+            <form method="post" action="{{ path('app_admin_reclamation_delete', {'id': rec.idReclamation}) }}" onsubmit="return confirm('Supprimer cette réclamation ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ rec.idReclamation) }}">
+                <button class="btn btn-outline-danger btn-sm shadow-sm"><i class="fas fa-trash"></i></button>
+            </form>
+        </div>
+    </td>
+</tr>
