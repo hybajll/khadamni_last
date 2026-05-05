@@ -58,8 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.', groups: ['user_password'])]
     #[Assert\Length(
         min: 4,
-        minMessage: 'Le mot de passe doit faire au moins {{ limit }} caracteres.'
-        ,
+        minMessage: 'Le mot de passe doit faire au moins {{ limit }} caracteres.',
         groups: ['user_password']
     )]
     protected ?string $password = null;
@@ -70,15 +69,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'LocalDateTime', type: 'datetime_immutable', nullable: true)]
     protected ?\DateTimeInterface $localDateTime = null;
 
-    // Business role for admins only (RBAC): SUPERADMIN | MODERATOR | MANAGER
     #[ORM\Column(name: 'role', length: 255, nullable: true)]
     protected ?string $adminRole = null;
 
-    // Keep DB column name in camelCase to match existing database column created on XAMPP.
     #[ORM\Column(name: 'avatarPath', length: 255, nullable: true)]
     protected ?string $avatarPath = null;
 
-    // Subscription and free usage (2 free actions: apply or CV improvement)
     #[ORM\Column(name: 'freeUsageCount', type: 'integer')]
     protected int $freeUsageCount = 0;
 
@@ -153,8 +149,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // --- Legacy Compatibility Methods ---
-
     public function isActif(): bool
     {
         return $this->isActive();
@@ -205,7 +199,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAvatarPath(?string $avatarPath): self
     {
         $this->avatarPath = $avatarPath;
-
         return $this;
     }
 
@@ -274,22 +267,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         $adminRole = $this->getAdminRole();
         if ($adminRole) {
-            // Backward compatible mapping (old values) + new RBAC roles
             $normalized = strtoupper(trim($adminRole));
             $roles[] = match ($normalized) {
-                // New values
                 'SUPERADMIN' => 'ROLE_SUPERADMIN',
-                'MODERATOR' => 'ROLE_MODERATOR',
-                'MANAGER' => 'ROLE_MANAGER',
+                'MODERATOR'  => 'ROLE_MODERATOR',
+                'MANAGER'    => 'ROLE_MANAGER',
 
-                // Old values (legacy)
-                'SUPER_ADMIN', 'SUPER-ADMIN', 'SUPER ADMIN', 'SUPER_ADMINISTRATEUR', 'SUPERADMINISTRATEUR', 'SUPER_ADMIN' => 'ROLE_SUPERADMIN',
+                // ✅ SUPER_ADMIN en double supprimé
+                'SUPER_ADMIN', 'SUPER-ADMIN', 'SUPER ADMIN',
+                'SUPER_ADMINISTRATEUR', 'SUPERADMINISTRATEUR' => 'ROLE_SUPERADMIN',
+
                 'GESTIONNAIRE' => 'ROLE_MANAGER',
-                'MODERATEUR' => 'ROLE_MODERATOR',
+                'MODERATEUR'   => 'ROLE_MODERATOR',
 
                 default => $normalized,
             };
         }
+
         return array_unique($roles);
     }
 
