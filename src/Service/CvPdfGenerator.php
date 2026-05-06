@@ -54,25 +54,46 @@ final class CvPdfGenerator
             'is_rtl' => $this->looksArabic($content),
         ]);
 
+        // Debug helper (dev): keep last rendered HTML to diagnose blank PDFs.
+        // Safe to keep in production too (small file), but can be removed later.
+        $debugDir = rtrim((string) \dirname(__DIR__, 2), '\\/').'/var';
+        if (is_dir($debugDir) && is_writable($debugDir)) {
+            @file_put_contents($debugDir.'/last-cv-pdf.html', $html);
+        }
+
         // Prefer mPDF when available (best Arabic shaping + RTL support).
         if (class_exists(\Mpdf\Mpdf::class)) {
             return $this->renderWithMpdf($html, $cv);
         }
 
         $options = new Options();
+        // Dompdf is picky with modern CSS. Keep the template "CSS 2.1-ish"
+        // and enable the HTML5 parser for better reliability.
+        $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', false);
+        $options->set('isFontSubsettingEnabled', true);
         $options->set('defaultFont', 'DejaVu Sans');
+        // Debug log (helps diagnose blank PDFs).
+        if (isset($debugDir) && is_dir($debugDir) && is_writable($debugDir)) {
+            $options->set('logOutputFile', $debugDir.'/dompdf.log');
+        }
 
         $dompdf = new Dompdf($options);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
 
-        $filename = 'cv.pdf';
+        // Debug helper: keep last rendered PDF bytes (dev) to confirm output is not empty.
+        if (isset($debugDir) && is_dir($debugDir) && is_writable($debugDir)) {
+            $out = $dompdf->output();
+            @file_put_contents($debugDir.'/last-cv-pdf.pdf', $out);
+        }
+
+        $filename = 'cv-'.$cv->getId().'-'.(new \DateTimeImmutable())->format('Ymd-His').'.pdf';
         if ($cv->getUser()) {
             $name = trim((string) $cv->getUser()->getPrenom().' '.(string) $cv->getUser()->getNom());
             if ($name !== '') {
-                $filename = 'CV-'.$name.'.pdf';
+                $filename = 'CV-'.$name.'-'.$cv->getId().'-'.(new \DateTimeImmutable())->format('Ymd-His').'.pdf';
                 $filename = preg_replace('/[^A-Za-z0-9._\\- ]+/', '', $filename) ?? $filename;
                 $filename = str_replace(' ', '_', $filename);
             }
@@ -104,11 +125,11 @@ final class CvPdfGenerator
         $mpdf->autoLangToFont = true;
         $mpdf->WriteHTML($html);
 
-        $filename = 'cv.pdf';
+        $filename = 'cv-'.$cv->getId().'-'.(new \DateTimeImmutable())->format('Ymd-His').'.pdf';
         if ($cv->getUser()) {
             $name = trim((string) $cv->getUser()->getPrenom().' '.(string) $cv->getUser()->getNom());
             if ($name !== '') {
-                $filename = 'CV-'.$name.'.pdf';
+                $filename = 'CV-'.$name.'-'.$cv->getId().'-'.(new \DateTimeImmutable())->format('Ymd-His').'.pdf';
                 $filename = preg_replace('/[^A-Za-z0-9._\\- ]+/', '', $filename) ?? $filename;
                 $filename = str_replace(' ', '_', $filename);
             }

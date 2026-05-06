@@ -26,6 +26,59 @@ final class CvAiApiAssistant
         }
     }
 
+    /**
+     * Translate only (no rewriting beyond necessary cleanup).
+     *
+     * @param string $targetLang fr|en
+     */
+    public function translateOnly(string $originalText, string $targetLang): CvAiResult
+    {
+        $clean = trim($originalText);
+        if ($clean === '') {
+            return new CvAiResult('', '');
+        }
+
+        $targetLang = strtolower($targetLang);
+        if (!in_array($targetLang, ['fr', 'en'], true)) {
+            throw new \InvalidArgumentException('Langue cible invalide.');
+        }
+
+        try {
+            return $this->translateWithApi($clean, $targetLang);
+        } catch (\Throwable $e) {
+            // Without the API, we cannot translate reliably. Show a useful message for debugging.
+            $msg = trim($e->getMessage());
+            $msg = $this->simplifyProviderError($msg);
+            if ($msg === '') {
+                $msg = 'Vérifiez votre clé API et votre connexion internet.';
+            }
+
+            return new CvAiResult('', 'Traduction indisponible : '.$msg);
+        }
+    }
+
+    private function simplifyProviderError(string $message): string
+    {
+        $msg = trim($message);
+        if ($msg === '') {
+            return '';
+        }
+
+        // Gemini free-tier rate limit / quota message: "Please retry in Xs."
+        if (stripos($msg, 'Erreur API IA (Gemini)') !== false || stripos($msg, 'gemini') !== false) {
+            if (preg_match('/retry in\\s+([0-9]+(?:\\.[0-9]+)?)s/i', $msg, $m)) {
+                $seconds = (float) $m[1];
+                $secondsRounded = (int) max(1, ceil($seconds));
+                return 'Quota/limite atteinte. Réessayez dans '.$secondsRounded.' seconde(s).';
+            }
+            if (stripos($msg, 'quota') !== false || stripos($msg, 'rate') !== false || stripos($msg, 'limit') !== false) {
+                return 'Quota/limite atteinte. Réessayez dans quelques secondes (ou attendez 1 minute).';
+            }
+        }
+
+        return $msg;
+    }
+
     private function improveWithApi(string $cvText, ?string $targetLang): CvAiResult
     {
         $prompt = $this->buildPrompt($cvText, $targetLang);
@@ -97,6 +150,36 @@ final class CvAiApiAssistant
         return new CvAiResult(trim($improved), $advice);
     }
 
+    private function translateWithApi(string $cvText, string $targetLang): CvAiResult
+    {
+        $prompt = $this->buildTranslatePrompt($cvText, $targetLang);
+
+        $schema = [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'properties' => [
+                'translated_cv' => ['type' => 'string'],
+            ],
+            'required' => ['translated_cv'],
+        ];
+
+        $rawText = $this->llmFactory->client()->generateText(
+            $prompt."\n\nJSON Schema:\n".json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+
+        // Some models may still answer with plain text even when asked for JSON.
+        // We accept either JSON (preferred) or raw text (fallback).
+        $translated = '';
+        try {
+            $decoded = $this->decodeJson($rawText);
+            $translated = trim((string) ($decoded['translated_cv'] ?? ''));
+        } catch (\Throwable) {
+            $translated = trim($rawText);
+        }
+
+        return new CvAiResult($translated, '');
+    }
+
     private function buildPrompt(string $cvText, ?string $targetLang): string
     {
         $languageHint = $this->detectLanguageHint($cvText);
@@ -135,13 +218,50 @@ Output requirements:
 * If target language is English: output English and use English section titles.
 * Do not invent any information, even while translating.
 * Formatting for improved_cv (plain text):
-  - Use clear section titles on their own line.
+  - Do NOT use emojis or decorative symbols.
+  - Use section titles on their own line, in ALL CAPS, exactly one of:
+    INFORMATIONS PERSONNELLES
+    COMPÉTENCES TECHNIQUES
+    LANGUES
+    PROFIL
+    FORMATION
+    EXPÉRIENCE
+    PROJETS
   - Use bullet points starting with "- " (dash + space).
   - Avoid long paragraphs.
   - In "Profile"/"Profil"/Arabic summary: maximum 4 bullets.
   - Keep layout clean and recruiter-friendly.
+  - Keep it 1-page friendly (short bullets, no repetitions).
 
 Here is the CV content:
+{$cvText}
+PROMPT;
+    }
+
+    private function buildTranslatePrompt(string $cvText, string $targetLang): string
+    {
+        $target = strtoupper($targetLang);
+
+        return <<<PROMPT
+You are an expert CV translator.
+
+Task:
+- Translate the CV to the target language: {$target}.
+- DO NOT add or invent any information.
+- Keep names, emails, phone numbers, dates, and technologies as-is.
+- Keep the structure similar (sections and bullets) but translate headings and sentences.
+- Output must be clean and recruiter-friendly.
+
+Output requirements:
+- Return ONLY valid JSON matching the schema (no markdown, no code fences).
+- Use exactly this key: "translated_cv".
+- The field "translated_cv" must contain ONLY the translated CV (plain text).
+- Do NOT include explanations.
+
+Example output:
+{"translated_cv":"..."}
+
+CV:
 {$cvText}
 PROMPT;
     }

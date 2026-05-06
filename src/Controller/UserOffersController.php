@@ -50,7 +50,7 @@ final class UserOffersController extends AbstractController
         $minScore = (int) $request->query->get('min', 60);
         $minScore = max(0, min(100, $minScore));
 
-        $cvText = (string) ($cv->getContenuAmeliore() ?: $cv->getContenuOriginal());
+        $cvText = (string) $cv->getContenuOriginal();
         $results = $matcher->match($cvText, $offers);
         if ($results !== [] && isset($results[0]['reason']) && str_contains((string) $results[0]['reason'], 'hors IA')) {
             $this->addFlash('info', 'IA indisponible pour le moment. Matching simplifié (mots-clés) affiché.');
@@ -106,4 +106,3 @@ final class UserOffersController extends AbstractController
         ]);
     }
 }
-

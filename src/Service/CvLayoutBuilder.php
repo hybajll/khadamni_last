@@ -4,7 +4,8 @@ namespace App\Service;
 
 /**
  * Builds a simple 2-column CV layout from parsed sections.
- * Left column: contact + skills-like sections.
+ *
+ * Left column: personal/contact + skills-like sections.
  * Right column: profile + education + experience + projects, etc.
  */
 final class CvLayoutBuilder
@@ -42,12 +43,17 @@ final class CvLayoutBuilder
 
     private function isLeftColumnSection(string $lowerTitle): bool
     {
+        // Include both correct UTF-8 and common mojibake variants we saw in templates.
         $leftKeywords = [
             // French / English
             'contact',
             'coordonnées',
+            'coordonnees',
+            'coordonnÃ©es',
             'informations personnelles',
             'compétences',
+            'compétences techniques',
+            'compÃ©tences',
             'competences',
             'skills',
             'langues',
@@ -56,11 +62,14 @@ final class CvLayoutBuilder
             'certification',
             'centres d’intérêt',
             "centres d'intérêt",
+            "centres d'interet",
+            'centres dâ€™intÃ©rÃªt',
+            "centres d'intÃ©rÃªt",
             'interests',
 
             // Arabic
-            'التواصل',
             'الاتصال',
+            'التواصل',
             'المهارات',
             'الكفاءات',
             'اللغات',
@@ -68,7 +77,8 @@ final class CvLayoutBuilder
         ];
 
         foreach ($leftKeywords as $needle) {
-            if ($lowerTitle === $needle || str_contains($lowerTitle, $needle)) {
+            $needleLower = mb_strtolower($needle);
+            if ($lowerTitle === $needleLower || str_contains($lowerTitle, $needleLower)) {
                 return true;
             }
         }

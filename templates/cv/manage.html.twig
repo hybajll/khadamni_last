@@ -10,17 +10,6 @@
     </div>
 
     {% if cv %}
-        {% set has_arabic = cv.contenuOriginal matches '/\\p{Arabic}/u' %}
-        {% if has_arabic and not mpdf_available %}
-            <div class="alert alert-warning border">
-                <div class="fw-semibold">PDF عربية: تنبيه</div>
-                <div class="small text-muted mt-1">
-                    حالياً توليد الـ PDF يستعمل Dompdf، وكتابة العربية قد تظهر غير واضحة.
-                    للحل: فعل PHP extension <code>gd</code> ثم ثبت <code>mpdf/mpdf</code>، وسنستعمله تلقائياً.
-                </div>
-            </div>
-        {% endif %}
-
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card">
@@ -78,31 +67,41 @@
                         <a href="{{ path('app_cv_edit') }}" class="btn btn-outline-primary w-100 mb-2">
                             <i class="fa-regular fa-pen-to-square me-2"></i>Modifier
                         </a>
+                        <div class="text-muted small mb-2">
+                            Vous pouvez rÃ©-importer un nouveau PDF Ã  tout moment dans â€œModifierâ€.
+                        </div>
 
                         <a href="{{ path('app_user_offers_recommended') }}" class="btn btn-light border w-100 mb-2">
                             <i class="fa-solid fa-briefcase me-2"></i>Offres compatibles (CV)
                         </a>
 
+                        {# Traduction supprimée (on garde فقط تحسين CV + PDF). #}
+                        {#
+                        <form method="POST" action="{{ path('app_cv_translate') }}" class="mb-2">
+                            <input type="hidden" name="_token" value="{{ csrf_token('translate_cv') }}">
+                            <label class="form-label small text-muted mb-1">Traduction</label>
+                            <div class="d-flex gap-2">
+                                <select name="target_lang" class="form-select">
+                                    <option value="fr">Français</option>
+                                    <option value="en" selected>English</option>
+                                </select>
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fa-solid fa-language me-2"></i>Traduire
+                                </button>
+                            </div>
+                        </form>
+                        #}
+
                         <form method="POST" action="{{ path('app_cv_improve') }}" class="mb-2">
                             <input type="hidden" name="_token" value="{{ csrf_token('improve_cv') }}">
-                            <div class="mb-2">
-                                <label class="form-label small text-muted mb-1">Langue du CV (optionnel)</label>
-                                <select name="target_lang" class="form-select">
-                                    <option value="auto" selected>Garder la même langue</option>
-                                    <option value="fr">Français</option>
-                                    <option value="en">English</option>
-                                </select>
-                            </div>
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Améliorer
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Améliorer avec IA
                             </button>
                         </form>
 
-                        {% if cv.nombreAmeliorations and cv.nombreAmeliorations > 0 %}
                             <a href="{{ path('app_cv_download_improved') }}" class="btn btn-light border w-100 mb-2">
                                 <i class="fa-regular fa-file-pdf me-2"></i>Télécharger le PDF (dernière version)
                             </a>
-                        {% endif %}
 
                         <a href="{{ path('app_user_home') }}" class="btn btn-secondary w-100">Retour</a>
                     </div>

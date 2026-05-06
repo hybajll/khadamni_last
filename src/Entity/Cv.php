@@ -27,9 +27,6 @@ class Cv
     #[ORM\Column(name: 'contenuOriginal', type: Types::TEXT)]
     private ?string $contenuOriginal = null;
 
-    #[ORM\Column(name: 'contenuAmeliore', type: Types::TEXT, nullable: true)]
-    private ?string $contenuAmeliore = null;
-
     #[ORM\Column(name: 'conseilsAi', type: Types::TEXT, nullable: true)]
     private ?string $conseilsAi = null;
 
@@ -69,9 +66,6 @@ class Cv
 
     public function getContenuOriginal(): ?string { return $this->contenuOriginal; }
     public function setContenuOriginal(?string $contenuOriginal): self { $this->contenuOriginal = $contenuOriginal; return $this; }
-
-    public function getContenuAmeliore(): ?string { return $this->contenuAmeliore; }
-    public function setContenuAmeliore(?string $contenuAmeliore): self { $this->contenuAmeliore = $contenuAmeliore; return $this; }
 
     public function getConseilsAi(): ?string { return $this->conseilsAi; }
     public function setConseilsAi(?string $conseilsAi): self { $this->conseilsAi = $conseilsAi; return $this; }

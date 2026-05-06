@@ -221,20 +221,16 @@ final class CvController extends AbstractController
             return $this->redirectToRoute('app_cv_new');
         }
 
-        $targetLang = strtolower(trim((string) $request->request->get('target_lang', 'auto')));
-        $targetLang = in_array($targetLang, ['auto', 'fr', 'en'], true) ? $targetLang : 'auto';
-        $targetLang = $targetLang === 'auto' ? null : $targetLang;
-
-        $result = $cvAiAssistant->improveAndAdvise((string) $cv->getContenuOriginal(), $targetLang);
+        // Improve only (keep language). Translation is handled by a dedicated action.
+        $result = $cvAiAssistant->improveAndAdvise((string) $cv->getContenuOriginal(), null);
         if ($result->improvedText === '') {
             $this->addFlash('error', 'Veuillez ajouter du texte à votre CV avant de l’améliorer.');
             return $this->redirectToRoute('app_cv_edit');
         }
 
         // New behavior: the improved CV becomes the latest saved version.
-        // We overwrite contenuOriginal and clear contenuAmeliore so the previous version is not kept.
+        // We overwrite contenuOriginal so the improved CV becomes the latest saved version.
         $cv->setContenuOriginal($result->improvedText);
-        $cv->setContenuAmeliore(null);
         $cv->setConseilsAi($result->adviceText);
         $cv->setNombreAmeliorations(($cv->getNombreAmeliorations() ?? 0) + 1);
         $cv->setDateUpload(new \DateTime());
@@ -248,37 +244,59 @@ final class CvController extends AbstractController
         return $this->redirectToRoute('app_cv_manage');
     }
 
-    #[Route('/view-improved', name: 'app_cv_view_improved', methods: ['GET'])]
-    public function viewImproved(
+    // Translation feature removed (AI improvement + PDF export only).
+    /*
+    #[Route('/traduire', name: 'app_cv_translate', methods: ['POST'])]
+    public function translate(
+        Request $request,
+        EntityManagerInterface $entityManager,
         CvRepository $cvRepository,
-        CvStructuredParser $structuredParser,
-        CvLayoutBuilder $layoutBuilder,
-    ): Response
-    {
+        CvAiApiAssistant $cvAiAssistant,
+        SubscriptionService $subscriptionService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('translate_cv', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_cv_manage');
+        }
+
         $user = $this->getUser();
+        if ($user instanceof \App\Entity\User) {
+            $block = $subscriptionService->blockMessageIfNotAllowed($user);
+            if ($block) {
+                $this->addFlash('error', $block);
+                $this->addFlash('info', 'Actions gratuites restantes : '.$subscriptionService->remainingFreeActions($user));
+                return $this->redirectToRoute('app_subscription');
+            }
+        }
+
         $cv = $cvRepository->findOneBy(['user' => $user]);
+        if (!$cv) {
+            $this->addFlash('error', 'Aucun CV trouvÃ©.');
+            return $this->redirectToRoute('app_cv_new');
+        }
 
-        // We no longer keep a separate improved version.
-        if (!$cv || !$cv->getContenuOriginal()) {
-            $this->addFlash('error', 'Ajoutez votre CV d\'abord.');
+        $targetLang = strtolower(trim((string) $request->request->get('target_lang', 'fr')));
+        $targetLang = in_array($targetLang, ['fr', 'en'], true) ? $targetLang : 'fr';
+
+        $result = $cvAiAssistant->translateOnly((string) $cv->getContenuOriginal(), $targetLang);
+        if ($result->improvedText === '') {
+            $this->addFlash('error', $result->adviceText !== '' ? $result->adviceText : 'Traduction impossible.');
             return $this->redirectToRoute('app_cv_manage');
         }
 
-        if (!$cv->getContenuAmeliore()) {
-            return $this->redirectToRoute('app_cv_manage');
+        $cv->setContenuOriginal($result->improvedText);
+        $cv->setConseilsAi(null);
+        $cv->setDateUpload(new \DateTime());
+
+        $entityManager->flush();
+        if ($user instanceof \App\Entity\User) {
+            $subscriptionService->recordAction($user);
         }
 
-        $originalSections = $structuredParser->parse((string) $cv->getContenuOriginal());
-        $improvedSections = $structuredParser->parse((string) $cv->getContenuAmeliore());
-
-        return $this->render('cv/view_improved.html.twig', [
-            'cv' => $cv,
-            'original_sections' => $originalSections,
-            'improved_sections' => $improvedSections,
-            'original_layout' => $layoutBuilder->build($originalSections),
-            'improved_layout' => $layoutBuilder->build($improvedSections),
-        ]);
+        $this->addFlash('success', 'Votre CV a Ã©tÃ© traduit. La derniÃ¨re version a Ã©tÃ© enregistrÃ©e.');
+        return $this->redirectToRoute('app_cv_manage');
     }
+    */
 
     #[Route('/download-improved', name: 'app_cv_download_improved', methods: ['GET'])]
     public function downloadImproved(CvRepository $cvRepository, CvPdfGenerator $cvPdfGenerator): Response
@@ -286,7 +304,7 @@ final class CvController extends AbstractController
         $user = $this->getUser();
         $cv = $cvRepository->findOneBy(['user' => $user]);
 
-        // Use the latest saved version (contenuOriginal). If contenuAmeliore exists, it will be used by the generator.
+        // Use the latest saved version (contenuOriginal).
         if (!$cv || !trim((string) $cv->getContenuOriginal())) {
             $this->addFlash('error', "Ajoutez votre CV d'abord.");
             return $this->redirectToRoute('app_cv_manage');
