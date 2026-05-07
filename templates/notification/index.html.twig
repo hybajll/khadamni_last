@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Notifications - Khadamni{% endblock %}
+
+{% block body %}
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="h4 mb-1">Notifications</h1>
+            <div class="text-muted small">Vos dernières alertes.</div>
+        </div>
+        <form method="post" action="{{ path('app_notifications_mark_all_read') }}" onsubmit="return false;">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="khMarkAllRead">Tout marquer comme lu</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="list-group list-group-flush" id="khNotifPageList">
+            {% if notifications is empty %}
+                <div class="p-4 text-muted">Aucune notification.</div>
+            {% else %}
+                {% for n in notifications %}
+                    <div class="list-group-item d-flex align-items-start justify-content-between gap-3">
+                        <div class="d-flex gap-2">
+                            <div class="pt-1"><i class="bi {{ n.icon }}"></i></div>
+                            <div>
+                                <div class="{{ n.isRead ? '' : 'fw-semibold' }}">{{ n.title }}</div>
+                                <div class="text-muted small">{{ n.message }}</div>
+                                <div class="text-muted small mt-1">{{ n.createdAt|date('Y-m-d H:i') }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            {% if n.link %}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ n.link }}">Ouvrir</a>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm btn-outline-danger khDeleteNotif" data-id="{{ n.id }}">Supprimer</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const markAllBtn = document.getElementById('khMarkAllRead');
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async () => {
+                    await fetch({{ path('app_notifications_mark_all_read')|json_encode|raw }}, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    });
+                    location.reload();
+                });
+            }
+
+            document.querySelectorAll('.khDeleteNotif').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (!id) return;
+                    await fetch({{ path('app_notifications_delete', {id: 0})|json_encode|raw }}.replace('/0', '/' + id), {
+                        method: 'DELETE',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    });
+                    location.reload();
+                });
+            });
+        })();
+    </script>
+{% endblock %}
+
