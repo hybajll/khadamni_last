@@ -36,6 +36,15 @@ class UserRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function countNonAdmins(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u INSTANCE OF App\\Entity\\Etudiant OR u INSTANCE OF App\\Entity\\Diplome')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * Utilisateurs (candidats) dont l'abonnement expire à une date donnée (jour).
      *
