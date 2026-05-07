@@ -36,6 +36,28 @@ class UserRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Utilisateurs (candidats) dont l'abonnement expire à une date donnée (jour).
+     *
+     * @return User[]
+     */
+    public function findUsersWithSubscriptionExpiringOn(\DateTimeImmutable $day): array
+    {
+        $start = $day->setTime(0, 0, 0);
+        $end = $start->modify('+1 day');
+
+        return $this->createQueryBuilder('u')
+            ->andWhere('u INSTANCE OF App\\Entity\\Etudiant OR u INSTANCE OF App\\Entity\\Diplome')
+            ->andWhere('u.subscriptionEndDate IS NOT NULL')
+            ->andWhere('u.subscriptionEndDate >= :start')
+            ->andWhere('u.subscriptionEndDate < :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('u.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

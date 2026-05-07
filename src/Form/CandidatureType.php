@@ -24,7 +24,7 @@ class CandidatureType extends AbstractType
             ->add('cvPath', FileType::class, [
                 'label' => 'Télécharger votre CV (PDF uniquement)',
                 'mapped' => false,
-                'required' => true,
+                'required' => false,
                 'constraints' => [
                     new File([
                         'maxSize' => '2M',

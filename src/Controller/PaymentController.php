@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\InAppNotificationService;
+use App\Service\PaymentSmsNotifier;
 use App\Service\SubscriptionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +16,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class PaymentController extends AbstractController
 {
     #[Route('/start', name: 'app_payment_start', methods: ['GET', 'POST'])]
-    public function start(Request $request, SubscriptionService $subscriptionService, InAppNotificationService $inAppNotificationService): Response
+    public function start(
+        Request $request,
+        SubscriptionService $subscriptionService,
+        InAppNotificationService $inAppNotificationService,
+        PaymentSmsNotifier $paymentSmsNotifier,
+    ): Response
     {
         $user = $this->getUser();
         if (!$user) {
@@ -38,6 +44,7 @@ final class PaymentController extends AbstractController
             $payment = $subscriptionService->createPendingPaymentWithMethod($user, $method);
             $subscriptionService->confirmPayment($payment);
             $inAppNotificationService->notifyPaymentConfirmed($payment);
+            $paymentSmsNotifier->notifyPaymentConfirmed($payment);
 
             $this->addFlash('success', 'Paiement simulé confirmé. Abonnement actif.');
             return $this->redirectToRoute('app_subscription');

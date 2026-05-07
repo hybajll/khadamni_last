@@ -1,14 +1,6 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
     secret: '%env(APP_SECRET)%'
-<<<<<<< HEAD
-
-    # Note that the session will be started ONLY if you read or write from it.
-    session: true
-
-    #esi: true
-    #fragments: true
-=======
     annotations: false
     http_method_override: false
     handle_all_throwables: true
@@ -26,14 +18,9 @@ framework:
     #fragments: true
     php_errors:
         log: true
->>>>>>> 99de4081c485d35108cfc6223ee27fd1f566d5e9
 
 when@test:
     framework:
         test: true
         session:
-<<<<<<< HEAD
             storage_factory_id: session.storage.factory.mock_file
-=======
-            storage_factory_id: session.storage.factory.mock_file
->>>>>>> 99de4081c485d35108cfc6223ee27fd1f566d5e9

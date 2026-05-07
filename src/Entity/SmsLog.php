@@ -15,6 +15,7 @@ class SmsLog
 {
     public const TYPE_SUBSCRIPTION_EXPIRY = 'subscription_expiry'; // rappel J-2
     public const TYPE_SUBSCRIPTION_EXPIRED = 'subscription_expired'; // expiré
+    public const TYPE_PAYMENT_CONFIRMATION = 'payment_confirmation'; // paiement validé
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

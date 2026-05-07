@@ -20,7 +20,7 @@ final class Version20260410094209 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE messenger_messages (id BIGINT AUTO_INCREMENT NOT NULL, body LONGTEXT NOT NULL, headers LONGTEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at DATETIME NOT NULL, available_at DATETIME NOT NULL, delivered_at DATETIME DEFAULT NULL, INDEX IDX_75EA56E0FB7336F0E3BD61CE16BA31DBBF396750 (queue_name, available_at, delivered_at, id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
+        $this->addSql('CREATE TABLE IF NOT EXISTS messenger_messages (id BIGINT AUTO_INCREMENT NOT NULL, body LONGTEXT NOT NULL, headers LONGTEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at DATETIME NOT NULL, available_at DATETIME NOT NULL, delivered_at DATETIME DEFAULT NULL, INDEX IDX_75EA56E0FB7336F0E3BD61CE16BA31DBBF396750 (queue_name, available_at, delivered_at, id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('ALTER TABLE questions_enquete DROP FOREIGN KEY `fk_attribut_enquete`');
         $this->addSql('ALTER TABLE reponse_enquete DROP FOREIGN KEY `fk_reponse_enquete`');
         $this->addSql('DROP TABLE abonnement');
@@ -66,7 +66,7 @@ final class Version20260410094209 extends AbstractMigration
         $this->addSql('CREATE TABLE society (id INT NOT NULL, name VARCHAR(150) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_general_ci`, email VARCHAR(150) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_general_ci`, password VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT \'NULL\' COLLATE `utf8mb4_general_ci`, phone VARCHAR(20) CHARACTER SET utf8mb4 DEFAULT \'NULL\' COLLATE `utf8mb4_general_ci`, address VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT \'NULL\' COLLATE `utf8mb4_general_ci`, domain VARCHAR(150) CHARACTER SET utf8mb4 DEFAULT \'NULL\' COLLATE `utf8mb4_general_ci`, description TEXT CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_general_ci`, website VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT \'NULL\' COLLATE `utf8mb4_general_ci`) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_general_ci` ENGINE = InnoDB COMMENT = \'\' ');
         $this->addSql('ALTER TABLE questions_enquete ADD CONSTRAINT `fk_attribut_enquete` FOREIGN KEY (id_enquete) REFERENCES enquete (id_enquete) ON DELETE CASCADE');
         $this->addSql('ALTER TABLE reponse_enquete ADD CONSTRAINT `fk_reponse_enquete` FOREIGN KEY (id_enquete) REFERENCES enquete (id_enquete) ON DELETE CASCADE');
-        $this->addSql('DROP TABLE messenger_messages');
+        $this->addSql('DROP TABLE IF EXISTS messenger_messages');
         $this->addSql('ALTER TABLE cv DROP FOREIGN KEY FK_B66FFE92FE6E88D7');
         $this->addSql('DROP INDEX IDX_B66FFE92FE6E88D7 ON cv');
         $this->addSql('ALTER TABLE cv CHANGE contenuOriginal contenuOriginal TEXT NOT NULL, CHANGE contenuAmeliore contenuAmeliore TEXT NOT NULL, CHANGE dateUpload dateUpload DATETIME DEFAULT \'current_timestamp()\' NOT NULL, CHANGE nombreAmeliorations nombreAmeliorations INT DEFAULT 0 NOT NULL, CHANGE estPublic estPublic TINYINT DEFAULT 0 NOT NULL');

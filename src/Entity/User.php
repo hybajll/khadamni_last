@@ -18,8 +18,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\DiscriminatorColumn(name: 'type', type: 'string')]
 #[ORM\DiscriminatorMap([
     'etudiant' => Etudiant::class,
+    'ETUDIANT' => Etudiant::class,
     'diplome' => Diplome::class,
+    'DIPLOME' => Diplome::class,
     'admin' => Admin::class,
+    'ADMIN' => Admin::class,
 ])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {

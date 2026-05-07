@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Candidature;
 use App\Entity\Recommendation;
 use App\Form\CandidatureType;
+use App\Repository\CvRepository;
 use App\Repository\OfferRepository;
+use App\Service\CvPdfGenerator;
 use App\Service\SubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +25,8 @@ final class CandidatureController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         OfferRepository $offerRepository,
+        CvRepository $cvRepository,
+        CvPdfGenerator $cvPdfGenerator,
         SubscriptionService $subscriptionService,
     ): Response {
         $candidature = new Candidature();
@@ -53,19 +57,65 @@ final class CandidatureController extends AbstractController
                 }
             }
 
+            // Default email to logged-in user (avoid manual mismatch)
+            if ($user instanceof \App\Entity\User) {
+                $candidature->setEmail((string) $user->getEmail());
+            }
+
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/cvs';
+            if (!is_dir($uploadsDir)) {
+                @mkdir($uploadsDir, 0775, true);
+            }
+
+            // CV PDF: upload is optional. If missing, use the user's saved CV (and generate/copy a PDF).
             $cvFile = $form->get('cvPath')->getData();
             if ($cvFile) {
-                $newFilename = 'cv-'.uniqid().'.'.$cvFile->guessExtension();
+                $newFilename = 'cv-' . uniqid() . '.' . ($cvFile->guessExtension() ?: 'pdf');
                 try {
-                    $cvFile->move(
-                        $this->getParameter('kernel.project_dir').'/public/uploads/cvs',
-                        $newFilename
-                    );
+                    $cvFile->move($uploadsDir, $newFilename);
                     $candidature->setCvPath($newFilename);
                 } catch (FileException $e) {
                     $this->addFlash('danger', "Une erreur est survenue lors de l'upload du CV.");
-                    return $this->redirectToRoute('app_candidature_new');
+                    return $this->redirectToRoute('app_candidature_new', ['offer' => $offerId ?: null]);
                 }
+            } else {
+                if (!$user instanceof \App\Entity\User) {
+                    $this->addFlash('danger', "Vous devez être connecté.");
+                    return $this->redirectToRoute('app_login');
+                }
+
+                $cv = $cvRepository->findOneBy(['user' => $user]);
+                if (!$cv) {
+                    $this->addFlash('danger', "Ajoutez votre CV avant de postuler.");
+                    return $this->redirectToRoute('app_cv_manage');
+                }
+
+                $newFilename = 'cv-' . $user->getId() . '-' . uniqid() . '.pdf';
+
+                // If the user imported a PDF, copy it. Otherwise generate the PDF from saved content.
+                $publicRoot = $this->getParameter('kernel.project_dir') . '/public/';
+                $importedPath = $cv->getPdfPath();
+                $importedAbsolute = $importedPath ? $publicRoot . ltrim($importedPath, '/\\') : null;
+
+                if ($importedAbsolute && is_file($importedAbsolute) && is_readable($importedAbsolute)) {
+                    @copy($importedAbsolute, $uploadsDir . '/' . $newFilename);
+                    $candidature->setCvPath($newFilename);
+                } else {
+                    $pdfResponse = $cvPdfGenerator->downloadResponse($cv);
+                    $bytes = $pdfResponse->getContent();
+                    if (is_string($bytes) && $bytes !== '') {
+                        @file_put_contents($uploadsDir . '/' . $newFilename, $bytes);
+                        $candidature->setCvPath($newFilename);
+                    } else {
+                        $this->addFlash('danger', "Impossible de générer le PDF de votre CV. Réessayez.");
+                        return $this->redirectToRoute('app_cv_manage');
+                    }
+                }
+            }
+
+            if (!$candidature->getCvPath()) {
+                $this->addFlash('danger', "Veuillez joindre un CV (PDF) ou créer votre CV dans l'application.");
+                return $this->redirectToRoute('app_candidature_new', ['offer' => $offerId ?: null]);
             }
 
             $recommendation = new Recommendation();
@@ -119,4 +169,3 @@ final class CandidatureController extends AbstractController
         return $this->render('front/success.html.twig');
     }
 }
-

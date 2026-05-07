@@ -24,9 +24,9 @@ class SmsService
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface     $logger,
-        private readonly string $twilioAccountSid,
-        private readonly string $twilioAuthToken,
-        private readonly string $twilioFromNumber,
+        private readonly ?string $twilioAccountSid = null,
+        private readonly ?string $twilioAuthToken = null,
+        private readonly ?string $twilioFromNumber = null,
     ) {}
 
     /**
@@ -39,6 +39,14 @@ class SmsService
      */
     public function send(string $to, string $message): bool
     {
+        // Mode "projet académique": si Twilio n'est pas configuré, on ne bloque pas l'appli.
+        if (!$this->twilioAccountSid || !$this->twilioAuthToken || !$this->twilioFromNumber) {
+            $this->logger->info('SMS ignoré (Twilio non configuré).', [
+                'to' => $to,
+            ]);
+            return true;
+        }
+
         // Nettoyer le numéro (supprimer espaces, tirets)
         $to = preg_replace('/[\s\-]/', '', $to);
 
