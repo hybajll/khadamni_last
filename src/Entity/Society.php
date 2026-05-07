@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SocietyRepository::class)]
 #[ORM\Table(name: 'society')]
-#[UniqueEntity(fields: ['email'], message: 'Cet email est deja utilise par une autre societe.')]
+#[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé par une autre société.')]
 class Society implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -22,13 +22,8 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
-    #[Assert\NotBlank(message: 'Le nom de la societe est obligatoire.')]
-    #[Assert\Length(
-        min: 2,
-        max: 150,
-        minMessage: 'Le nom doit faire au moins {{ limit }} caracteres.',
-        maxMessage: 'Le nom ne doit pas depasser {{ limit }} caracteres.'
-    )]
+    #[Assert\NotBlank(message: 'Le nom de la société est obligatoire.')]
+    #[Assert\Length(min: 2, max: 150)]
     private ?string $name = null;
 
     #[ORM\Column(length: 150, unique: true)]
@@ -38,38 +33,21 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.')]
-    #[Assert\Length(
-        min: 4,
-        minMessage: 'Le mot de passe doit faire au moins {{ limit }} caracteres.'
-    )]
     private ?string $password = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    #[Assert\NotBlank(message: 'Le numero de telephone est obligatoire.')]
-    #[Assert\Regex(
-        pattern: '/^[\d\s\-\+\(\)]+$/',
-        message: 'Le numero de telephone n\'est pas valide.'
-    )]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\NotBlank(message: 'L\'adresse est obligatoire.')]
     private ?string $address = null;
 
     #[ORM\Column(length: 150, nullable: true)]
-    #[Assert\NotBlank(message: 'Le domaine d\'activite est obligatoire.')]
     private ?string $domain = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Assert\NotBlank(message: 'La description est obligatoire.')]
-    #[Assert\Length(
-        max: 5000,
-        maxMessage: 'La description ne doit pas depasser {{ limit }} caracteres.'
-    )]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\NotBlank(message: 'Le site web est obligatoire.')]
     #[Assert\Url(message: 'Le site web n\'est pas une URL valide.')]
     private ?string $website = null;
 
@@ -79,6 +57,7 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
 
+    // Subscription + free usage (2 free publications)
     #[ORM\Column(name: 'freeUsageCount', type: 'integer')]
     private int $freeUsageCount = 0;
 
@@ -100,148 +79,46 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
         $this->reclamations = new ArrayCollection();
     }
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    // --- GETTERS & SETTERS ---
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+    public function getId(): ?int { return $this->id; }
 
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
+    public function getName(): ?string { return $this->name; }
+    public function setName(string $name): self { $this->name = $name; return $this; }
 
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
+    public function getEmail(): ?string { return $this->email; }
+    public function setEmail(string $email): self { $this->email = $email; return $this; }
 
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-        return $this;
-    }
+    public function getPassword(): ?string { return $this->password; }
+    public function setPassword(string $password): self { $this->password = $password; return $this; }
 
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
+    public function getPhone(): ?string { return $this->phone; }
+    public function setPhone(?string $phone): self { $this->phone = $phone; return $this; }
 
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-        return $this;
-    }
+    public function getAddress(): ?string { return $this->address; }
+    public function setAddress(?string $address): self { $this->address = $address; return $this; }
 
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
+    public function getDomain(): ?string { return $this->domain; }
+    public function setDomain(?string $domain): self { $this->domain = $domain; return $this; }
 
-    public function setPhone(?string $phone): self
-    {
-        $this->phone = $phone;
-        return $this;
-    }
+    public function getDescription(): ?string { return $this->description; }
+    public function setDescription(?string $description): self { $this->description = $description; return $this; }
 
-    public function getAddress(): ?string
-    {
-        return $this->address;
-    }
+    public function getWebsite(): ?string { return $this->website; }
+    public function setWebsite(?string $website): self { $this->website = $website; return $this; }
 
-    public function setAddress(?string $address): self
-    {
-        $this->address = $address;
-        return $this;
-    }
+    public function isActive(): bool { return $this->isActive; }
+    public function setIsActive(bool $isActive): self { $this->isActive = $isActive; return $this; }
 
-    public function getDomain(): ?string
-    {
-        return $this->domain;
-    }
+    public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
+    public function setCreatedAt(?\DateTimeInterface $createdAt): self { $this->createdAt = $createdAt; return $this; }
 
-    public function setDomain(?string $domain): self
-    {
-        $this->domain = $domain;
-        return $this;
-    }
+    public function getFreeUsageCount(): int { return $this->freeUsageCount; }
+    public function setFreeUsageCount(int $freeUsageCount): self { $this->freeUsageCount = max(0, $freeUsageCount); return $this; }
+    public function incrementFreeUsageCount(): self { $this->freeUsageCount++; return $this; }
 
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(?string $description): self
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    public function getWebsite(): ?string
-    {
-        return $this->website;
-    }
-
-    public function setWebsite(?string $website): self
-    {
-        $this->website = $website;
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function setIsActive(bool $isActive): self
-    {
-        $this->isActive = $isActive;
-        return $this;
-    }
-
-    public function getCreatedAt(): ?\DateTimeInterface
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(?\DateTimeInterface $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-        return $this;
-    }
-
-    public function getFreeUsageCount(): int
-    {
-        return $this->freeUsageCount;
-    }
-
-    public function setFreeUsageCount(int $freeUsageCount): self
-    {
-        $this->freeUsageCount = max(0, $freeUsageCount);
-        return $this;
-    }
-
-    public function incrementFreeUsageCount(): self
-    {
-        $this->freeUsageCount++;
-        return $this;
-    }
-
-    public function getSubscriptionEndDate(): ?\DateTimeImmutable
-    {
-        return $this->subscriptionEndDate;
-    }
-
-    public function setSubscriptionEndDate(?\DateTimeImmutable $subscriptionEndDate): self
-    {
-        $this->subscriptionEndDate = $subscriptionEndDate;
-        return $this;
-    }
+    public function getSubscriptionEndDate(): ?\DateTimeImmutable { return $this->subscriptionEndDate; }
+    public function setSubscriptionEndDate(?\DateTimeImmutable $subscriptionEndDate): self { $this->subscriptionEndDate = $subscriptionEndDate; return $this; }
 
     public function isSubscriptionActive(?\DateTimeImmutable $now = null): bool
     {
@@ -249,13 +126,10 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->subscriptionEndDate instanceof \DateTimeImmutable && $this->subscriptionEndDate > $now;
     }
 
-    /**
-     * @return Collection<int, Offer>
-     */
-    public function getOffers(): Collection
-    {
-        return $this->offers;
-    }
+    // --- RELATIONS ---
+
+    /** @return Collection<int, Offer> */
+    public function getOffers(): Collection { return $this->offers; }
 
     public function addOffer(Offer $offer): self
     {
@@ -276,13 +150,8 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Reclamation>
-     */
-    public function getReclamations(): Collection
-    {
-        return $this->reclamations;
-    }
+    /** @return Collection<int, Reclamation> */
+    public function getReclamations(): Collection { return $this->reclamations; }
 
     public function addReclamation(Reclamation $reclamation): self
     {
@@ -303,6 +172,8 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    // --- SECURITY METHODS ---
+
     public function getRoles(): array
     {
         return ['ROLE_SOCIETY'];
@@ -310,6 +181,7 @@ class Society implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
+        // Si vous stockez des données temporaires sensibles, effacez-les ici
     }
 
     public function getUserIdentifier(): string

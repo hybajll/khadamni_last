@@ -35,16 +35,11 @@
     </td>
     <td>
         <div class="d-flex gap-2 justify-content-center">
-            <a href="{{ path('app_admin_reclamation_edit', {'id': rec.idReclamation}) }}" class="btn btn-warning btn-sm text-white shadow-sm">
-                <i class="fas fa-edit"></i>
-            </a>
+          
             <a href="{{ path('app_admin_reclamation_chat', {'id': rec.idReclamation}) }}" class="btn btn-info btn-sm text-white shadow-sm">
                 <i class="fas fa-comments"></i>
             </a>
-            <form method="post" action="{{ path('app_admin_reclamation_delete', {'id': rec.idReclamation}) }}" onsubmit="return confirm('Supprimer cette réclamation ?');">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ rec.idReclamation) }}">
-                <button class="btn btn-outline-danger btn-sm shadow-sm"><i class="fas fa-trash"></i></button>
-            </form>
+            
         </div>
     </td>
 </tr>
