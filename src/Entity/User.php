@@ -91,9 +91,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reclamation::class)]
     private Collection $reclamations;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: News::class)]
+    private Collection $news;
+
     public function __construct()
     {
         $this->reclamations = new ArrayCollection();
+        $this->news = new ArrayCollection();
     }
 
     // ================= GETTERS / SETTERS =================
@@ -310,6 +314,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->reclamations->removeElement($reclamation)) {
             if ($reclamation->getUser() === $this) {
                 $reclamation->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, News>
+     */
+    public function getNews(): Collection
+    {
+        return $this->news;
+    }
+
+    public function addNews(News $news): self
+    {
+        if (!$this->news->contains($news)) {
+            $this->news->add($news);
+            $news->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNews(News $news): self
+    {
+        if ($this->news->removeElement($news)) {
+            if ($news->getUser() === $this) {
+                $news->setUser(null);
             }
         }
 
