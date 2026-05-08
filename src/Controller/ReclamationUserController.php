@@ -32,11 +32,9 @@ class ReclamationUserController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        // --- VERIFICATION DE RECLAMATION EN COURS ---
-        // On définit les critères selon le type d'utilisateur
+        // --- 1. VERIFICATION DE RECLAMATION EN COURS ---
         $ownerCriteria = ($connectedUser instanceof Society) ? ['society' => $connectedUser] : ['user' => $connectedUser];
         
-        // On cherche s'il existe une réclamation qui n'est PAS dans un état final
         $activeReclamation = $reclamationRepository->createQueryBuilder('r')
             ->where('r.statut NOT IN (:final_states)')
             ->andWhere($connectedUser instanceof Society ? 'r.society = :owner' : 'r.user = :owner')
@@ -47,20 +45,17 @@ class ReclamationUserController extends AbstractController
 
         $hasActiveReclamation = !empty($activeReclamation);
 
-        // Initialisation du formulaire
+        // --- 2. TRAITEMENT DU FORMULAIRE DE NOUVELLE RECLAMATION ---
         $reclamation = new Reclamation();
         $form = $this->createForm(ReclamationType::class, $reclamation);
         $form->handleRequest($request);
 
-        // --- TRAITEMENT DU FORMULAIRE ---
         if ($form->isSubmitted() && $form->isValid()) {
-            // Blocage de sécurité : interdire l'envoi si une réclamation est active
             if ($hasActiveReclamation) {
-                $this->addFlash('error', 'Action impossible : vous avez déjà une réclamation en cours de traitement.');
+                $this->addFlash('error', 'Action impossible : vous avez déjà une réclamation en cours.');
                 return $this->redirectToRoute('app_user_reclamation_index');
             }
 
-            // Attribution du propriétaire
             if ($connectedUser instanceof Society) {
                 $reclamation->setSociety($connectedUser);
             } else {
@@ -73,7 +68,7 @@ class ReclamationUserController extends AbstractController
             $entityManager->persist($reclamation);
             $entityManager->flush();
 
-            // Logique IA & Notification
+            // Logique IA
             if ($aiService->processNewReclamation($reclamation)) {
                 $similar = $reclamationRepository->findSimilarByTypeWithResponse(
                     $reclamation->getType(), 
@@ -100,7 +95,7 @@ class ReclamationUserController extends AbstractController
             ]);
         }
 
-        // Récupération de l'historique
+        // --- 3. RÉCUPÉRATION DE L'HISTORIQUE ---
         $myReclamations = $reclamationRepository->findBy($ownerCriteria, ['date_creation' => 'DESC']);
 
         $template = ($connectedUser instanceof Society) 
@@ -110,7 +105,7 @@ class ReclamationUserController extends AbstractController
         return $this->render($template, [
             'reclamations' => $myReclamations,
             'form' => $form->createView(),
-            'hasActiveReclamation' => $hasActiveReclamation // Utile pour griser le bouton en Twig
+            'hasActiveReclamation' => $hasActiveReclamation
         ]);
     }
 
@@ -121,8 +116,16 @@ class ReclamationUserController extends AbstractController
         $messageContent = $request->request->get('message');
         $token = $request->request->get('_token');
 
+        // Validation CSRF
         if (!$this->isCsrfTokenValid('reply' . $reclamation->getIdReclamation(), $token)) {
             $this->addFlash('error', 'Session expirée.');
+            return $this->redirectToRoute('app_user_reclamation_index');
+        }
+
+        // --- BLOCAGE SI RÉCLAMATION TERMINÉE ---
+        $statutsClotures = [StatutReclamation::RESOLUE, StatutReclamation::REJETEE];
+        if (in_array($reclamation->getStatut(), $statutsClotures)) {
+            $this->addFlash('error', 'Cette réclamation est clôturée. Impossible d\'envoyer un message.');
             return $this->redirectToRoute('app_user_reclamation_index');
         }
 
@@ -142,22 +145,18 @@ class ReclamationUserController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_user_reclamation_index', ['open_chat' => $reclamation->getIdReclamation()]);
+        return $this->redirectToRoute('app_user_reclamation_index', [
+            'open_chat' => $reclamation->getIdReclamation()
+        ]);
     }
 
-    /*------------test gemini-------------*/
     #[Route('/test-gemini', name: 'test_gemini')]
     public function testGemini(AiAssistantService $aiService): Response
     {
-        $result = $aiService->generateAiResponse(
-            'STAGE', 
-            null, 
-            'Je cherche un stage en informatique mais je ne trouve pas d\'offres'
-        );
+        $result = $aiService->generateAiResponse('STAGE', null, 'Je cherche un stage en informatique');
         
         return $this->json([
             'reponse_ia' => $result,
-            'source' => str_contains($result, 'support@khadamni.tn') ? 'database_or_fallback' : 'gemini',
             'contient_phrase_generique' => str_contains($result, 'équipe support')
         ]);
     }
