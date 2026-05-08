@@ -73,4 +73,40 @@ class ReponseReclamationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * NOUVELLE MÉTHODE : Trouve les réponses récentes par type de réclamation
+     */
+    public function findRecentResponsesByType(string $typeReclamation, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.reclamation', 'rec')
+            ->where('rec.type = :type')
+            ->andWhere('r.message IS NOT NULL')
+            ->andWhere('LENGTH(r.message) > 50') // Éviter les réponses trop courtes
+            ->orderBy('r.date_reponse', 'DESC')
+            ->setParameter('type', $typeReclamation)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * NOUVELLE MÉTHODE : Trouve les meilleures réponses d'admins
+     */
+    public function findBestResponsesByType(string $typeReclamation, int $limit = 5): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.reclamation', 'rec')
+            ->leftJoin('r.auteur', 'admin')
+            ->where('rec.type = :type')
+            ->andWhere('r.message IS NOT NULL')
+            ->andWhere('LENGTH(r.message) > 100') // Réponses substantielles
+            ->andWhere('admin.id IS NOT NULL') // Réponses d'admins uniquement
+            ->orderBy('r.date_reponse', 'DESC')
+            ->setParameter('type', $typeReclamation)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

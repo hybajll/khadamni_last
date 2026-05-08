@@ -1,667 +1,503 @@
-{# ========================================================== #}
-{# Étend le template principal base.html.twig #}
-{# ========================================================== #}
 {% extends 'base.html.twig' %}
 
-{# Début du bloc body injecté dans base.html.twig #}
 {% block body %}
 
-{# ========================================================== #}
-{# Début CSS interne à la page #}
-{# ========================================================== #}
 <style>
-
-{# Variables globales CSS #}
-:root{
-
-    /* Couleur de fond principale */
-    --primary-bg:#fdf6ec;
-
-    /* Couleur fond sidebar */
-    --sidebar-bg:#ffffff;
-
-    /* Couleur accent orange */
-    --accent-orange:#ffb100;
-
-    /* Hauteur header */
-    --header-height:80px;
+:root {
+    --accent-orange: #ffb100;
+    --dark: #1e293b;
+    --light-bg: #f8fafc;
+    --white: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
 }
 
-/* Reset général */
-*{
-
-    /* padding + border inclus dans largeur */
-    box-sizing:border-box;
+/* BASE */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--light-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text);
 }
 
-/* html et body */
-html,body{
-
-    /* retire marges navigateur */
-    margin:0;
-
-    /* retire padding navigateur */
-    padding:0;
-
-    /* largeur totale */
-    width:100%;
-
-    /* hauteur minimale */
-    min-height:70%;
+/* LAYOUT PRINCIPAL */
+.main-wrapper {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 40px);
+    align-items: stretch;
 }
 
-/* Body principal */
-body{
-
-    /* fond global */
-    background:var(--primary-bg);
-
-    /* police */
-    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-
-    /* bloque scroll horizontal */
-    overflow-x:hidden;
+/* SIDEBAR */
+.sidebar-list {
+    width: 340px;
+    min-width: 300px;
+    max-width: 380px;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ========================================================== */
-/* HEADER */
-/* ========================================================== */
-
-.support-header{
-
-    /* largeur responsive */
-    width:95%;
-
-    /* largeur max */
-    max-width:1300px;
-
-    /* centrage + marge haute */
-    margin:10px auto 0 auto;
-
-    /* coins arrondis */
-    border-radius:18px;
+/* CONTENT */
+.content-area {
+    flex: 1;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ========================================================== */
-/* WRAPPER PRINCIPAL */
-/* ========================================================== */
-
-.main-wrapper{
-
-    /* largeur responsive */
-    width:95%;
-
-    /* largeur max */
-    max-width:1600px;
-
-    /* centré */
-    margin:15px auto;
-
-    /* disposition horizontale */
-    display:flex;
-
-    /* espace entre colonnes */
-    gap:20px;
-
-    /* étire verticalement */
-    align-items:stretch;
-
-    /* hauteur écran moins header */
-    min-height:calc(100vh - 130px);
+/* HEADER SIDEBAR */
+.sidebar-list .p-3 {
+    background: var(--dark);
+    color: white;
 }
 
-/* ========================================================== */
-/* SIDEBAR GAUCHE */
-/* ========================================================== */
-
-.sidebar-list{
-
-    /* largeur fixe */
-    width:320px;
-
-    /* largeur minimale */
-    min-width:280px;
-
-    /* fond blanc */
-    background:#fff;
-
-    /* coins arrondis */
-    border-radius:20px;
-
-    /* masque débordement */
-    overflow:hidden;
-
-    /* bordure */
-    border:1px solid #eee;
-
-    /* flex vertical */
-    display:flex;
-
-    flex-direction:column;
+/* ITEMS */
+.ticket-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: 0.25s ease;
 }
 
-/* Titre sidebar */
-.sidebar-header{
-
-    /* fond sombre */
-    background:#343a40;
-
-    /* texte blanc */
-    color:#fff;
-
-    /* espace intérieur */
-    padding:18px;
+.ticket-item:hover {
+    background: #fffdf5;
 }
 
-/* Zone scrollable des tickets */
-.ticket-scroll{
-
-    /* prend place restante */
-    flex:1;
-
-    /* scroll vertical */
-    overflow-y:auto;
-
-    /* padding intérieur */
-    padding:12px;
+.ticket-item.active {
+    background: #fff7db;
+    border-left: 5px solid var(--accent-orange);
 }
 
-/* ========================================================== */
-/* ITEMS RECLAMATION */
-/* ========================================================== */
-
-.ticket-item{
-
-    /* fond blanc */
-    background:#fff;
-
-    /* bordure légère */
-    border:1px solid #eee;
-
-    /* coins arrondis */
-    border-radius:14px;
-
-    /* espace interne */
-    padding:14px;
-
-    /* marge basse */
-    margin-bottom:12px;
-
-    /* animation douce */
-    transition:0.2s;
-}
-
-/* Au survol */
-.ticket-item:hover{
-
-    /* fond beige clair */
-    background:#fff8e8;
-
-    /* remonte légèrement */
-    transform:translateY(-2px);
-
-    /* curseur main */
-    cursor:pointer;
-}
-
-/* Ticket actif */
-.ticket-item.active{
-
-    /* bordure orange */
-    border:2px solid var(--accent-orange);
-}
-
-/* ========================================================== */
-/* ZONE DROITE */
-/* ========================================================== */
-
-.content-area{
-
-    /* prend tout espace restant */
-    flex:1;
-
-    /* autorise réduction */
-    min-width:0;
-
-    /* fond blanc */
-    background:#fff;
-
-    /* coins arrondis */
-    border-radius:22px;
-
-    /* bordure */
-    border:1px solid #eee;
-
-    /* cache débordement */
-    overflow:hidden;
-
-    /* flex vertical */
-    display:flex;
-
-    flex-direction:column;
-}
-
-/* ========================================================== */
-/* FORMULAIRE */
-/* ========================================================== */
-
-.create-view{
-
-    /* padding intérieur */
-    padding:20px;
-
-    /* scroll si besoin */
-    overflow-y:auto;
-
-    /* prend hauteur restante */
-    flex:1;
-}
-
-/* Boite formulaire */
-.form-box{
-
-    /* largeur totale */
-    width:100%;
-
-    /* largeur max */
-    max-width:500px;
-
-    /* centrage */
-    margin:auto;
-
-    /* fond crème */
-    background:#fffaf3;
-
-    /* bordure orange clair */
-    border:1px solid #ffe2a6;
-
-    /* coins arrondis */
-    border-radius:22px;
-
-    /* padding */
-    padding:30px;
-}
-
-/* ========================================================== */
 /* CHAT */
-/* ========================================================== */
-
-.chat-view{
-
-    /* caché au départ */
-    display:none;
-
-    /* vertical */
-    flex-direction:column;
-
-    /* pleine hauteur */
-    height:80%;
-
-    min-height:80%;
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* Header chat */
-.chat-header{
-
-    /* dégradé orange */
-    background:linear-gradient(135deg,#ffb100,#ffc933);
-
-    /* texte blanc */
-    color:#fff;
-
-    /* padding */
-    padding:18px 22px;
-
-    /* horizontal */
-    display:flex;
-
-    /* espace entre éléments */
-    justify-content:space-between;
-
-    /* alignement vertical */
-    align-items:center;
-
-    /* petit gap */
-    gap:10px;
+/* BUBBLES - CORRECTION ALIGNEMENT */
+.bubble {
+    max-width: 75%;
+    padding: 10px 16px;
+    border-radius: 18px;
+    word-wrap: break-word;
+    line-height: 1.4;
 }
 
-/* Zone messages */
-.chat-messages{
-
-    /* prend place restante */
-    flex:1;
-
-    /* scroll vertical */
-    overflow-y:auto;
-
-    /* padding */
-    padding:22px;
-
-    /* flex vertical */
-    display:flex;
-
-    flex-direction:column;
-
-    /* espace entre bulles */
-    gap:14px;
-
-    /* fond léger */
-    background:#fffdf9;
+/* Message utilisateur (à droite) */
+.bubble-user {
+    align-self: flex-end;
+    background: var(--dark);
+    color: white;
+    border-bottom-right-radius: 4px;
 }
 
-/* ========================================================== */
-/* BULLES CHAT */
-/* ========================================================== */
-
-.bubble{
-
-    /* largeur max */
-    max-width:75%;
-
-    /* padding */
-    padding:14px 16px;
-
-    /* arrondi */
-    border-radius:18px;
-
-    /* taille texte */
-    font-size:15px;
-
-    /* hauteur ligne */
-    line-height:1.5;
-
-    /* casse longs mots */
-    word-break:break-word;
+/* Message admin (à gauche) */
+.bubble-admin {
+    align-self: flex-start;
+    background: white;
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
 }
 
-/* Message utilisateur */
-.bubble-user{
-
-    /* à droite */
-    align-self:flex-end;
-
-    /* fond sombre */
-    background:#343a40;
-
-    /* texte blanc */
-    color:#fff;
-
-    /* coin spécifique */
-    border-bottom-right-radius:5px;
+/* Timestamp dans les bulles */
+.bubble small {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    opacity: 0.75;
 }
 
-/* Message admin */
-.bubble-admin{
-
-    /* à gauche */
-    align-self:flex-start;
-
-    /* fond blanc */
-    background:#ffffff;
-
-    /* bordure */
-    border:1px solid #eee;
-
-    /* texte noir */
-    color:#222;
-
-    /* coin spécifique */
-    border-bottom-left-radius:5px;
+/* Timestamp spécifique pour le message utilisateur (plus clair) */
+.bubble-user small {
+    color: rgba(255, 255, 255, 0.7);
 }
 
-/* Petit texte heure / auteur */
-.bubble small{
-
-    /* petite taille */
-    font-size:11px;
-
-    /* transparence */
-    opacity:0.7;
+/* Timestamp pour le message admin */
+.bubble-admin small {
+    color: var(--muted);
 }
 
-/* Footer chat */
-.chat-footer{
-
-    /* fond blanc */
-    background:#fff;
-
-    /* bordure haute */
-    border-top:1px solid #eee;
-
-    /* padding */
-    padding:15px;
+/* FORM AREA CHAT */
+#view-chat .p-3.border-top {
+    background: white;
 }
 
-/* ========================================================== */
-/* RESPONSIVE TABLETTE */
-/* ========================================================== */
+/* FORM CREATE - STYLE ADMIN */
+.form-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
 
-@media(max-width:1100px){
+.form-header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1.5rem;
+}
 
-    .main-wrapper{
+.btn-save {
+    background-color: #27ae60;
+    color: white;
+    transition: 0.3s;
+}
 
-        /* empile verticalement */
-        flex-direction:column;
+.btn-save:hover {
+    background-color: #2ecc71;
+    transform: translateY(-1px);
+}
 
-        /* hauteur auto */
-        min-height:auto;
+#view-create .form-control,
+#view-create .form-select {
+    border-radius: 8px;
+}
+
+#view-create .form-control:focus,
+#view-create .form-select:focus {
+    border-color: #ffb100;
+    box-shadow: 0 0 0 0.2rem rgba(255, 177, 0, 0.15);
+}
+
+#view-create hr {
+    border-top: 1px solid #dee2e6;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .main-wrapper {
+        flex-direction: column;
     }
 
-    .sidebar-list,
-    .content-area{
-
-        /* pleine largeur */
-        width:100%;
-
-        min-width:100%;
+    .sidebar-list {
+        width: 100%;
+        max-width: 100%;
     }
 
-    .sidebar-list{
-
-        /* hauteur fixe */
-        height:300px;
+    .content-area {
+        min-height: 500px;
     }
 }
 
-/* ========================================================== */
-/* RESPONSIVE MOBILE */
-/* ========================================================== */
+/* Corrections supplémentaires */
+.ticket-item small.text-muted,
+.ticket-item .small.text-muted {
+    font-size: 0.75rem;
+}
 
-@media(max-width:768px){
+.ticket-item .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
 
-    .support-header,
-    .main-wrapper{
+#reply-form .form-control {
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
 
-        /* pleine largeur */
-        width:100%;
+#reply-form .form-control:focus {
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 0.2rem rgba(255, 177, 0, 0.1);
+}
 
-        /* supprime marges */
-        margin:0;
+#reply-form button {
+    transition: all 0.2s ease;
+}
 
-        /* coins carrés */
-        border-radius:0;
+#reply-form button:hover {
+    transform: scale(1.05);
+    background-color: #e6a000;
+}
+
+/* Animation pour le chargement */
+.ticket-item {
+    transition: all 0.25s ease;
+}
+
+/* Scrollbar personnalisée pour chat-messages */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+}
+
+/* Correction pour les espaces */
+#view-create .mx-auto {
+    width: 100%;
+}
+
+/* Amélioration responsive pour les bulles */
+@media (max-width: 768px) {
+    .bubble {
+        max-width: 85%;
     }
-
-    .support-header{
-
-        /* padding mobile */
-        padding:15px !important;
+    
+    .main-wrapper {
+        padding: 10px;
+        gap: 10px;
     }
-
-    .main-wrapper{
-
-        /* espace interne */
-        padding:15px;
-
-        /* gap réduit */
-        gap:15px;
-    }
-
-    .create-view{
-
-        /* padding réduit */
-        padding:18px;
-    }
-
-    .form-box{
-
-        /* padding réduit */
-        padding:20px;
-    }
-
-    .chat-header{
-
-        /* vertical */
-        flex-direction:column;
-
-        /* aligne gauche */
-        align-items:flex-start;
-    }
-
-    .bubble{
-
-        /* largeur complète */
-        max-width:100%;
-    }
-
-    .chat-footer form{
-
-        /* vertical */
-        flex-direction:column;
-    }
-
-    .chat-footer button{
-
-        /* largeur totale */
-        width:100% !important;
-
-        /* arrondi */
-        border-radius:14px !important;
+    
+    .chat-messages {
+        padding: 15px;
     }
 }
 
+/* Correction de l'affichage du conteneur principal */
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Ajustement du titre principal pour qu'il ne dépasse pas */
+.container-fluid > .d-flex {
+    padding-left: 20px;
+    padding-right: 20px;
+}
 </style>
 
-{# Fin du bloc body #}
+<div class="container-fluid mt-4">
 
+    <div class="d-flex justify-content-between align-items-center mb-4 px-3">
+        <h4 class="fw-bold text-dark">
+            <i class="fas fa-headset me-2"></i>
+            Support Khadamni
+        </h4>
 
-<div class="support-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-    <h5 class="fw-bold m-0"><i class="fas fa-headset me-2 text-warning"></i>Khadamni Support</h5>
-    <button class="btn btn-warning text-white fw-bold rounded-pill" onclick="showCreateForm()">
-        <i class="fas fa-plus me-2"></i>Nouvelle Réclamation
-    </button>
-</div>
-
-<div class="main-wrapper">
-    <div class="sidebar-list shadow-sm">
-        <div class="sidebar-header">
-            <h6 class="m-0 fw-bold">Anciennes réclamations</h6>
-        </div>
-        <div class="ticket-scroll">
-            {% for rec in reclamations %}
-                <div class="ticket-item shadow-sm" id="ticket-{{ rec.idReclamation }}" 
-                     onclick="loadChat('{{ rec.idReclamation }}', '{{ rec.sujet|escape('js') }}')">
-                    <div class="small text-muted mb-1">{{ rec.dateCreation|date('d/m/Y') }}</div>
-                    <div class="fw-bold text-dark">{{ rec.sujet }}</div>
-                    <span class="badge bg-light text-dark border mt-2">{{ rec.statut.value }}</span>
-                </div>
-
-                <script type="application/json" id="data-{{ rec.idReclamation }}">
-                    [
-                        {"type": "user", "msg": "{{ rec.description|escape('js') }}", "time": "{{ rec.dateCreation|date('H:i') }}"}
-                        {% for rep in rec.reponseReclamations %}
-                        ,{"type": "{{ rep.auteur is null ? 'ai' : 'admin' }}", "msg": "{{ rep.message|escape('js') }}", "time": "{{ rep.dateReponse|date('H:i') }}"}
-                        {% endfor %}
-                    ]
-                </script>
-            {% endfor %}
-        </div>
+        <button class="btn btn-warning text-white fw-bold rounded-pill shadow-sm"
+                onclick="showCreateForm()">
+            <i class="fas fa-plus me-1"></i>
+            Nouvelle Réclamation
+        </button>
     </div>
 
-    <div class="content-area shadow-sm">
-        
-        <div id="view-create" class="create-view">
-            <div class="form-box shadow-sm">
-                <h4 class="fw-bold mb-4" style="color: #c05621;">Soumettre une réclamation</h4>
-                {{ form_start(form) }}
-                    <div class="mb-3">
-                        <label class="fw-bold small">Sujet</label>
-                        {{ form_widget(form.sujet, {'attr': {'class': 'form-control border-dark', 'placeholder': 'Ex: Problème de mot de passe'}}) }}
+    <div class="main-wrapper">
+
+        <!-- LISTE -->
+        <div class="sidebar-list shadow-sm">
+            <div class="p-3 bg-dark text-white fw-bold">
+                Historique
+            </div>
+
+            <div class="overflow-auto" style="max-height:600px;">
+                {% for rec in reclamations %}
+                    <div class="ticket-item"
+                         id="ticket-{{ rec.idReclamation }}"
+                         onclick="loadChat('{{ rec.idReclamation }}','{{ rec.sujet|escape('js') }}')">
+
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">
+                                {{ rec.dateCreation|date('d/m/Y') }}
+                            </span>
+
+                            <span class="badge bg-light text-dark">
+                                {{ rec.statut.value ?? rec.statut }}
+                            </span>
+                        </div>
+
+                        <div class="fw-bold mt-1 text-truncate">
+                            {{ rec.sujet }}
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="fw-bold small">Description</label>
-                        {{ form_widget(form.description, {'attr': {'class': 'form-control border-dark', 'rows': '5'}}) }}
+
+                    <!-- DATA JSON -->
+                    <script type="application/json" id="data-{{ rec.idReclamation }}">
+                    {
+                        "token":"{{ csrf_token('reply' ~ rec.idReclamation) }}",
+                        "replyUrl":"{{ is_granted('ROLE_SOCIETY') 
+                            ? path('app_society_reclamation_reply', {'id': rec.idReclamation}) 
+                            : path('app_user_reclamation_reply', {'id': rec.idReclamation}) }}",
+                        "messages":[
+                            {
+                                "type":"user",
+                                "msg":"{{ rec.description|escape('js') }}",
+                                "time":"{{ rec.dateCreation|date('H:i') }}"
+                            }
+                            {% for rep in rec.reponseReclamations %}
+                            ,{
+                                "type":"{{ (rep.auteur or rep.societyAuteur) ? 'user' : 'admin' }}",
+                                "msg":"{{ rep.message|escape('js') }}",
+                                "time":"{{ rep.dateReponse|date('H:i') }}"
+                            }
+                            {% endfor %}
+                        ]
+                    }
+                    </script>
+                {% else %}
+                    <div class="p-5 text-center text-muted">
+                        Aucune réclamation.
                     </div>
-                    <div class="mb-4">
-                        <label class="fw-bold small">Catégorie</label>
-                        {{ form_widget(form.type, {'attr': {'class': 'form-select border-dark'}}) }}
-                    </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-dark px-5 py-2 fw-bold">Envoyer</button>
-                    </div>
-                {{ form_end(form) }}
+                {% endfor %}
             </div>
         </div>
 
-        <div id="view-chat" class="chat-view">
-            <div class="chat-header">
-                <h6 class="m-0 fw-bold" id="active-chat-title">Chat #ID - Sujet</h6>
-                <button class="btn btn-sm btn-outline-light" onclick="showCreateForm()">Retour</button>
-            </div>
-            <div class="chat-messages" id="chat-box">
+        <!-- CONTENU -->
+        <div class="content-area shadow-sm">
+
+            <div id="view-create" class="p-4">
+                <div class="mx-auto" style="max-width: 650px;">
+                    <div class="form-card shadow-lg">
+                        {# Header #}
+                        <div class="form-header d-flex align-items-center">
+                            
+                        </div>
+
+                        <div class="p-4">
+                            {{ form_start(form) }}
+                                {# Sujet #}
+                                <div class="mb-3">
+                                    <label class="fw-bold mb-1">Sujet :</label>
+                                    {{ form_widget(form.sujet, {
+                                        'attr': {
+                                            'class': 'form-control border-secondary-subtle',
+                                            'placeholder': 'Ex: Problème d\'accès au profil'
+                                        }
+                                    }) }}
+                                    <div class="text-danger small">{{ form_errors(form.sujet) }}</div>
+                                </div>
+
+                                {# Description #}
+                                <div class="mb-3">
+                                    <label class="fw-bold mb-1">Description détaillée :</label>
+                                    {{ form_widget(form.description, {
+                                        'attr': {
+                                            'class': 'form-control border-secondary-subtle',
+                                            'rows': '5',
+                                            'placeholder': 'Expliquez-nous votre problème ici...'
+                                        }
+                                    }) }}
+                                    <div class="text-danger small">{{ form_errors(form.description) }}</div>
+                                </div>
+
+                                {# Type #}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="fw-bold mb-1">Type de réclamation :</label>
+                                        {{ form_widget(form.type, {
+                                            'attr': {
+                                                'class': 'form-select border-secondary-subtle'
+                                            }
+                                        }) }}
+                                        <div class="text-danger small">{{ form_errors(form.type) }}</div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4 opacity-25">
+
+                                {# Actions #}
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" onclick="showCreateForm()" class="btn btn-light border px-4">Annuler</button>
+                                    
+                                    <button type="submit" class="btn btn-save px-5 fw-bold shadow-sm">
+                                        <i class="fas fa-paper-plane me-2"></i> Envoyer la réclamation
+                                    </button>
+                                </div>
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
                 </div>
-            <div class="chat-footer p-3 bg-white border-top">
-                <form id="reply-form" method="POST" class="d-flex gap-2">
-                    <input type="text" name="message" class="form-control rounded-pill" placeholder="Votre message...">
-                    <button class="btn btn-warning rounded-circle" style="width: 45px;"><i class="fas fa-paper-plane"></i></button>
-                </form>
             </div>
-        </div>
 
+            <!-- CHAT -->
+            <div id="view-chat" style="display:none; flex-direction:column; height:100%;">
+                <div class="bg-dark text-white p-3 fw-bold d-flex justify-content-between align-items-center">
+                    <span id="active-title">Discussion</span>
+                    <button class="btn btn-sm btn-outline-light" onclick="showCreateForm()">✕</button>
+                </div>
+
+                <div class="chat-messages" id="chat-box"></div>
+
+                <div class="p-3 border-top bg-white">
+                    <form id="reply-form" method="POST" class="d-flex gap-2">
+                        <input type="hidden" name="_token" value="">
+                        <input type="text" name="message" required class="form-control rounded-pill" placeholder="Votre réponse...">
+                        <button type="submit" class="btn btn-warning text-white rounded-circle" style="width:48px;height:48px;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
 
 <script>
-    function showCreateForm() {
-        document.getElementById('view-create').style.display = 'block';
-        document.getElementById('view-chat').style.display = 'none';
-        document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
-    }
+function showCreateForm() {
+    document.getElementById('view-create').style.display = 'block';
+    document.getElementById('view-chat').style.display = 'none';
+    document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+}
 
-    function loadChat(id, sujet) {
-        // Switch de vue
-        document.getElementById('view-create').style.display = 'none';
-        const chatView = document.getElementById('view-chat');
-        chatView.style.display = 'flex';
+function loadChat(id, sujet) {
+    document.getElementById('view-create').style.display = 'none';
+    const chatView = document.getElementById('view-chat');
+    chatView.style.display = 'flex';
 
-        // Update Header
-        document.getElementById('active-chat-title').innerText = "Chat #" + id + " - " + sujet;
-        
-        // Update Active Style
-        document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('ticket-' + id).classList.add('active');
+    document.getElementById('active-title').innerText = sujet;
 
-        // Load Messages
-        const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = '';
-        const data = JSON.parse(document.getElementById('data-' + id).textContent);
+    document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+    let active = document.getElementById('ticket-' + id);
+    if(active) active.classList.add('active');
 
-        data.forEach(m => {
-            const div = document.createElement('div');
-            const isUser = (m.type === 'user');
-            div.className = `bubble ${isUser ? 'bubble-user' : 'bubble-admin'}`;
-            div.innerHTML = `<small class="d-block fw-bold mb-1">${isUser ? 'Client' : 'Assistant Khadamni'}</small>${m.msg}`;
-            chatBox.appendChild(div);
-        });
+    const dataElement = document.getElementById('data-' + id);
+    if (!dataElement) return;
 
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    let data = JSON.parse(dataElement.textContent);
 
-    // Gestion automatique de l'ouverture après envoi
-    document.addEventListener("DOMContentLoaded", function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const openId = urlParams.get('open_chat');
-        if (openId) { loadChat(openId, "Votre réclamation"); }
+    let form = document.getElementById('reply-form');
+    form.action = data.replyUrl;
+    form.querySelector('input[name="_token"]').value = data.token;
+
+    let box = document.getElementById('chat-box');
+    box.innerHTML = '';
+
+    data.messages.forEach(m => {
+        let div = document.createElement('div');
+        div.className = 'bubble ' + (m.type === 'user' ? 'bubble-user' : 'bubble-admin');
+        div.innerHTML = `
+            <div>${m.msg}</div>
+            <small>${m.time}</small>
+        `;
+        box.appendChild(div);
     });
+
+    box.scrollTop = box.scrollHeight;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    let params = new URLSearchParams(window.location.search);
+    let openId = params.get('open_chat');
+    if(openId) {
+        let el = document.getElementById('ticket-' + openId);
+        if(el) el.click();
+    }
+});
 </script>
 {% endblock %}
