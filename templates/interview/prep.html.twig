@@ -1,0 +1,655 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Préparer un entretien{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap mb-3">
+        <div>
+            <div class="text-muted small fw-semibold">Khadamni • Interview</div>
+            <h1 class="h3 mb-1">Préparer un entretien</h1>
+            <div class="text-muted">
+                L’agent pose des questions <strong>selon l’offre</strong>, vous répondez <strong>par texte</strong>.
+                Après votre réponse, l’agent donne une évaluation et propose une <strong>réponse parfaite</strong> (lue à voix haute).
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btnStart" class="btn btn-primary"><i class="bi bi-play-fill me-1"></i>Démarrer</button>
+            <button id="btnStop" class="btn btn-outline-secondary" disabled><i class="bi bi-stop-fill me-1"></i>Stop</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card p-3">
+                <div class="fw-semibold">Paramètres</div>
+                <div class="text-muted small mt-1">Choisissez l’offre pour des questions plus techniques.</div>
+
+                <div class="mt-3">
+                    <label for="offerSelect" class="form-label small text-muted mb-1">Offre</label>
+                    <select id="offerSelect" class="form-select">
+                        <option value="">— Choisir une offre (optionnel) —</option>
+                        {% for offer in offers|default([]) %}
+                            <option value="{{ offer.id }}" {{ selectedOffer and offer.id == selectedOffer.id ? 'selected' : '' }}>
+                                {{ offer.title }}{% if offer.location %} — {{ offer.location }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <hr class="my-3" />
+
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="fw-semibold">Agent</div>
+                    <span id="badgeState" class="badge text-bg-secondary">Prêt</span>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-center">
+                    <div id="avatar" class="kh-avatar" aria-hidden="true">
+                        <div class="kh-face">
+                            <div class="kh-eyes"><span></span><span></span></div>
+                            <div class="kh-mouth"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-3">
+                    <button id="btnRepeat" class="btn btn-outline-primary" disabled><i class="bi bi-arrow-repeat me-1"></i>Répéter</button>
+                    <button id="btnSendText" class="btn btn-outline-dark" disabled><i class="bi bi-send me-1"></i>Envoyer réponse</button>
+                    <button id="btnNext" class="btn btn-dark" disabled><i class="bi bi-skip-forward-fill me-1"></i>Question suivante</button>
+                    <button id="btnTestVoice" class="btn btn-outline-secondary"><i class="bi bi-volume-up me-1"></i>Tester la voix</button>
+                </div>
+
+                <div id="diag" class="small text-muted mt-3" style="white-space: pre-wrap;"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card p-0 overflow-hidden">
+                <div class="px-3 py-2 border-bottom bg-white d-flex align-items-center justify-content-between">
+                    <div class="fw-semibold">Conversation</div>
+                    <div class="text-muted small"><span id="qIndex">0</span>/<span id="qTotal">0</span></div>
+                </div>
+
+                <div id="chat" class="kh-chat p-3"></div>
+
+                <div class="px-3 py-3 border-top bg-white">
+                    <label for="textAnswer" class="form-label small text-muted mb-1">Votre réponse (texte)</label>
+                    <textarea id="textAnswer" class="form-control" rows="4" placeholder="Écrivez votre réponse ici..."></textarea>
+                    <div class="d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+                        <div class="small text-muted">Vous pouvez cliquer sur “Question suivante” même sans répondre.</div>
+                        <div class="small text-muted"><span id="chars">0</span> caractères</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kh-avatar {
+        width: 110px;
+        height: 110px;
+        border-radius: 999px;
+        background: radial-gradient(circle at 30% 20%, rgba(255,140,0,.35), transparent 45%),
+                    radial-gradient(circle at 70% 70%, rgba(10,35,64,.35), transparent 48%),
+                    linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.7));
+        border: 1px solid rgba(15, 23, 42, 0.10);
+        box-shadow: 0 1.2rem 2rem rgba(10, 35, 64, 0.14);
+        display: grid;
+        place-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .kh-face { width: 72px; height: 72px; position: relative; }
+    .kh-eyes { display: flex; gap: 16px; justify-content: center; margin-top: 18px; }
+    .kh-eyes span { width: 10px; height: 10px; border-radius: 999px; background: rgba(15,23,42,.85); display: inline-block; }
+    .kh-mouth { width: 28px; height: 10px; border-radius: 0 0 999px 999px; border: 3px solid rgba(15,23,42,.65); border-top: 0; margin: 14px auto 0; }
+    .kh-avatar.talking .kh-mouth { animation: khTalk .24s infinite alternate ease-in-out; }
+    @keyframes khTalk { from { transform: scaleX(.85); } to { transform: scaleX(1.1); } }
+
+    .kh-chat {
+        height: min(62vh, 580px);
+        overflow: auto;
+        background:
+            radial-gradient(900px 240px at 0% 0%, rgba(255,140,0,.10), transparent 60%),
+            radial-gradient(900px 280px at 100% 40%, rgba(10,35,64,.10), transparent 60%),
+            rgba(255,255,255,.55);
+    }
+    .kh-msg { max-width: 78%; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(15, 23, 42, 0.10); box-shadow: 0 .8rem 1.6rem rgba(10,35,64,.08); }
+    .kh-msg.agent { background: rgba(255,255,255,.92); }
+    .kh-msg.user { background: rgba(255,140,0,.10); margin-left: auto; }
+    .kh-msg-meta { font-size: .78rem; color: rgba(15,23,42,.55); margin-bottom: 6px; }
+    .kh-msg + .kh-msg { margin-top: 10px; }
+</style>
+
+<script>
+(() => {
+    const FALLBACK_QUESTIONS = {{ questions|default([])|json_encode|raw }};
+    const OFFER = {{ selectedOffer ? {
+        id: selectedOffer.id,
+        title: selectedOffer.title,
+        domain: selectedOffer.domain,
+        location: selectedOffer.location,
+        contractType: selectedOffer.contractType,
+        experienceLevel: selectedOffer.experienceLevel,
+        description: selectedOffer.description
+    }|json_encode|raw : 'null' }};
+
+    const els = {
+        offerSelect: document.getElementById('offerSelect'),
+        btnStart: document.getElementById('btnStart'),
+        btnStop: document.getElementById('btnStop'),
+        btnRepeat: document.getElementById('btnRepeat'),
+        btnSendText: document.getElementById('btnSendText'),
+        btnNext: document.getElementById('btnNext'),
+        btnTestVoice: document.getElementById('btnTestVoice'),
+        badgeState: document.getElementById('badgeState'),
+        avatar: document.getElementById('avatar'),
+        chat: document.getElementById('chat'),
+        diag: document.getElementById('diag'),
+        qIndex: document.getElementById('qIndex'),
+        qTotal: document.getElementById('qTotal'),
+        textAnswer: document.getElementById('textAnswer'),
+        chars: document.getElementById('chars'),
+    };
+
+    let QUESTIONS = Array.isArray(FALLBACK_QUESTIONS) ? FALLBACK_QUESTIONS : [];
+    els.qTotal.textContent = String(QUESTIONS.length);
+
+    function diag(line) { els.diag.textContent = String(line ?? ''); }
+    function setState(text, badgeClass) { els.badgeState.textContent = text; els.badgeState.className = `badge ${badgeClass}`; }
+    function setAvatar(mode) { if (mode === 'talking') els.avatar.classList.add('talking'); else els.avatar.classList.remove('talking'); }
+    function scrollChat() { els.chat.scrollTop = els.chat.scrollHeight; }
+    function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    function addMsg(role, html, meta) {
+        const wrap = document.createElement('div');
+        wrap.className = `kh-msg ${role}`;
+        const metaEl = document.createElement('div');
+        metaEl.className = 'kh-msg-meta';
+        metaEl.textContent = meta || (role === 'agent' ? 'Agent' : 'Vous');
+        const body = document.createElement('div');
+        body.innerHTML = html;
+        wrap.appendChild(metaEl);
+        wrap.appendChild(body);
+        els.chat.appendChild(wrap);
+        scrollChat();
+    }
+
+    function pickFrenchVoice() {
+        const voices = speechSynthesis?.getVoices?.() || [];
+        const fr = voices.filter(v => /fr/i.test(v.lang || ''));
+        return fr.find(v => /Google|Microsoft/i.test(v.name || '')) || fr[0] || voices[0] || null;
+    }
+    function ensureVoicesReady(timeoutMs = 1200) {
+        if (!('speechSynthesis' in window) || !speechSynthesis.getVoices) return Promise.resolve();
+        const existing = speechSynthesis.getVoices();
+        if (existing && existing.length) return Promise.resolve();
+        return new Promise(resolve => {
+            let done = false;
+            const t = setTimeout(() => { if (done) return; done = true; resolve(); }, timeoutMs);
+            const handler = () => { if (done) return; done = true; clearTimeout(t); try { speechSynthesis.removeEventListener('voiceschanged', handler); } catch {} resolve(); };
+            try { speechSynthesis.addEventListener('voiceschanged', handler); } catch {}
+            try { speechSynthesis.getVoices(); } catch {}
+        });
+    }
+    async function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        await ensureVoicesReady();
+        try { speechSynthesis.cancel(); } catch {}
+        return new Promise(resolve => {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'fr-FR';
+            const voice = pickFrenchVoice();
+            if (voice) u.voice = voice;
+            u.volume = 1; u.rate = 1.02; u.pitch = 1.0;
+            u.onstart = () => { setAvatar('talking'); setState('Parle', 'text-bg-warning'); };
+            u.onend = () => { setAvatar('idle'); setState('Prêt', 'text-bg-secondary'); resolve(); };
+            u.onerror = () => { setAvatar('idle'); setState('Prêt', 'text-bg-secondary'); resolve(); };
+            try { speechSynthesis.speak(u); } catch { resolve(); }
+        });
+    }
+    let speakChain = Promise.resolve();
+    function speakQueued(text) { speakChain = speakChain.then(() => speak(text)); return speakChain; }
+
+    async function aiStart(offerId) {
+        const res = await fetch(`{{ path('app_interview_prep_ai_start') }}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ offerId: offerId || 0 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        return data;
+    }
+    async function aiEvaluate(index, answer) {
+        const res = await fetch(`{{ path('app_interview_prep_ai_answer') }}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ index, answer }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        return data;
+    }
+    async function aiPerfect(index) {
+        const res = await fetch(`{{ path('app_interview_prep_ai_perfect') }}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ index }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        return data;
+    }
+
+    function normalizeText(s) { return String(s || '').trim().replace(/\s+/g, ' '); }
+    function isGenericGreeting(answer) {
+        const a = normalizeText(answer).toLowerCase();
+        if (a.length < 8) return true;
+        const bad = ['bonjour','salut','je suis prêt','je suis prete','je suis pret','ok','daccord',"d'accord",'commençons','commence','je commence','je suis la','je suis là'];
+        return bad.some(x => a === x || a.startsWith(x + ' '));
+    }
+    function isAskingPerfectAnswer(answer) {
+        const a = normalizeText(answer).toLowerCase();
+        return a.includes('réponse parfaite') || a.includes('reponse parfaite') || a.includes('donne reponse') || a.includes('donne la reponse') || a.includes('donne ta reponse');
+    }
+
+    function extractTechFromOffer(offer) {
+        const desc = String(offer?.description || '');
+        const words = (desc.match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9#.+-]{3,}/g) || []).map(x => x.toLowerCase());
+        const known = new Set(['symfony','php','laravel','react','vue','angular','node','java','spring','python','django','flask','mysql','postgres','postgresql','mongodb','docker','git','api','rest','graphql','linux','ci','cd','kubernetes','javascript','typescript','html','css']);
+        const picked = [];
+        for (const w of words) {
+            if (known.has(w) && !picked.includes(w)) picked.push(w);
+            if (picked.length >= 6) break;
+        }
+        return picked;
+    }
+
+    function localPerfectAnswer(question, offer) {
+        const title = offer?.title ? String(offer.title) : 'ce poste';
+        const domain = offer?.domain ? String(offer.domain) : '';
+        const loc = offer?.location ? String(offer.location) : '';
+        const label = [title, domain, loc].filter(Boolean).join(' — ');
+        const tech = extractTechFromOffer(offer);
+        const techText = tech.length ? tech.join(', ') : '[stack/technos]';
+
+        const qid = String(question?.id || '');
+        const qtype = String(question?.type || '');
+
+        if (qid === 'intro_agent' || qtype === 'intro') {
+            return "Bonjour, je suis votre recruteur. Nous allons commencer par des questions générales, puis aller vers des questions techniques liées à l’offre. Cliquez sur « Question suivante » pour commencer.";
+        }
+        if (qid === 'presenter') {
+            return (
+                `Je m'appelle [Nom], je suis [profil/formation] et je candidate pour ${label || title}.\n` +
+                `J’ai environ [X] mois/années d’expérience sur [domaine] et sur ${techText}.\n` +
+                `Exemple concret : sur [projet], j’ai [action 1], puis [action 2], ce qui a permis [résultat chiffré].\n` +
+                `Je travaille de façon structurée : besoins clairs → petites tâches → tests → livraison.\n` +
+                `Mon objectif sur ce poste : apporter de l’impact dès le 1er mois et progresser avec l’équipe.`
+            );
+        }
+        if (qid === 'motivation') {
+            return (
+                `Ce poste m’intéresse pour 3 raisons :\n` +
+                `1) Les missions : [mission de l’offre] qui correspondent à mon expérience.\n` +
+                `2) La stack/domaine : ${techText}, que je veux approfondir.\n` +
+                `3) L’impact : livrer des résultats mesurables.\n\n` +
+                `Preuve : sur [projet], j’ai [action] et on a obtenu [résultat chiffré].\n` +
+                `Si je rejoins l’équipe, je commence par comprendre le besoin, proposer un plan 1–2 semaines, puis livrer une première version testée.`
+            );
+        }
+        if (qid === 'fit') {
+            return (
+                `Ce qui me différencie :\n` +
+                `- Autonomie : je sais diagnostiquer, expérimenter et documenter.\n` +
+                `- Qualité : tests + revue de code + CI.\n` +
+                `- Communication : je clarifie le besoin avant de coder.\n\n` +
+                `Exemple : sur [projet], j’ai pris en charge [tâche], proposé [solution], et le résultat a été [chiffre].`
+            );
+        }
+        if (qid.includes('tech_stack')) {
+            return (
+                `Pour ce poste, je privilégie une stack simple et maintenable :\n` +
+                `- Backend : ${tech.includes('symfony') ? 'Symfony/PHP' : '[framework backend]'} (API REST, validation, sécurité).\n` +
+                `- Base de données : ${tech.includes('mysql') ? 'MySQL' : '[DB]'} (modèle clair + indexes).\n` +
+                `- Outils : Git + CI + tests.\n\n` +
+                `Exemple : j’ai livré [feature] en [X] jours avec tests + CI, et on a réduit les bugs de [Y]%. Je choisis ces outils pour le ratio vitesse/qualité et la maintenance.`
+            );
+        }
+        if (qid.includes('tech_project')) {
+            return (
+                `Projet pertinent : [nom/projet].\n` +
+                `Contexte : [problème].\n` +
+                `Mon rôle : [responsabilité].\n` +
+                `Choix techniques : [API/DB/auth/tests] et pourquoi.\n` +
+                `Résultat : [impact chiffré] (ex: temps -30%, erreurs -50%).\n` +
+                `Ce que j’ai appris : [leçon] utile pour ${label || title}.`
+            );
+        }
+        if (qid.includes('tech_problem')) {
+            return (
+                `Bug difficile : [symptôme] (lenteur / erreur 500 / données incohérentes).\n` +
+                `Diagnostic : logs + reproduction + hypothèses + profiling.\n` +
+                `Cause racine : [requête non indexée / race condition / mauvaise validation].\n` +
+                `Fix : [changement] + test de non‑régression.\n` +
+                `Résultat : p95 passé de [X] ms à [Y] ms / erreurs -[Z]%.`
+            );
+        }
+        if (qid.includes('tech_quality')) {
+            return (
+                `Qualité :\n` +
+                `- Tests : unitaires + intégration sur endpoints critiques.\n` +
+                `- CI : lint + tests à chaque PR.\n` +
+                `- Review : checklist (sécurité, perf, lisibilité).\n\n` +
+                `Exemple : sur [projet], après CI+tests, les bugs en prod ont baissé de [X]% en [Y] semaines.`
+            );
+        }
+        if (qid.includes('tech_security')) {
+            return (
+                `Sécurité : risques → mesures.\n` +
+                `- Auth : permissions, mots de passe hashés, sessions/JWT.\n` +
+                `- Validation : éviter injection SQL/XSS/CSRF.\n` +
+                `- Logs : audit + alerting.\n\n` +
+                `Exemple : j’ai sécurisé un module (validation + CSRF) et réduit les erreurs de saisie de [X]%.`
+            );
+        }
+        if (qid === 'senior_arch') {
+            return (
+                `Pour ${label || title}, je proposerais une architecture simple mais robuste :\n` +
+                `1) API backend (${techText}) avec routes claires, validation et gestion d'erreurs.\n` +
+                `2) Couche métier (services) pour isoler la logique et faciliter les tests.\n` +
+                `3) Base de données (MySQL/PostgreSQL) avec schéma clair + indexes sur les parcours critiques.\n` +
+                `4) AuthN/AuthZ (rôles/permissions) + journalisation (audit) sur les actions sensibles.\n` +
+                `5) Tâches lentes en asynchrone (queue) : emails, exports, traitements.\n` +
+                `6) Observabilité : logs structurés, metrics (p95), alerting, traces.\n` +
+                `Compromis : je commence par un monolithe modulaire (livraison rapide), puis j'extrais seulement si la charge/organisation l'impose.\n` +
+                `Exemple : sur un projet similaire, ce découpage + tests a fait baisser les incidents de 30% et stabilisé le p95 à < 250ms.`
+            );
+        }
+        if (qid === 'senior_scale') {
+            return (
+                `Pour gérer la montée en charge, je procède par leviers mesurables :\n` +
+                `- Cache : HTTP cache + cache applicatif (ex: Redis) pour les lectures fréquentes.\n` +
+                `- DB : indexes, pagination, EXPLAIN, éviter N+1 et garder des transactions courtes.\n` +
+                `- Async : queue/files pour découpler (imports, notifications, génération PDF...).\n` +
+                `- Scalage : app stateless + plusieurs instances derrière un load balancer.\n` +
+                `- Monitoring : SLO (ex: p95 < 300ms), dashboards, alertes + tests de charge réguliers.\n` +
+                `Trade-off : je n'ajoute Redis/queue que si les mesures montrent un goulot (sinon, complexité inutile).\n` +
+                `Exemple : après indexes + pagination + cache, la latence est passée de 900ms à 220ms et les timeouts ont chuté de 70%.`
+            );
+        }
+        if (qid === 'senior_tradeoffs') {
+            return (
+                `Décision difficile : monolithe modulaire vs microservices.\n` +
+                `Contexte : équipe petite, délais courts, besoin d'itérer vite sur ${label || title}.\n` +
+                `Option A (microservices) : + scalabilité fine, - complexité (devops, observabilité, contrats, latence).\n` +
+                `Option B (monolithe modulaire) : + vitesse de delivery, + cohérence des données, - risque de couplage si mal structurant.\n` +
+                `Choix : monolithe modulaire avec limites claires (services) + CI + tests + observabilité.\n` +
+                `Comment je l'ai défendue : j'ai chiffré les coûts (run + incidents) et proposé un plan d'extraction si un module devient critique.\n` +
+                `Résultat : livraison en 4 semaines, 0 incident majeur les 2 premiers mois, et une extraction future facilitée par le découpage initial.`
+            );
+        }
+        if (qtype === 'senior') {
+            return (
+                `Réponse senior (structure pro) :\n` +
+                `- Objectif + contraintes (SLA, délai, budget) liées à ${label || title}.\n` +
+                `- Options (2) + trade-off clair.\n` +
+                `- Décision : pourquoi, risques, plan de rollback.\n` +
+                `- Mesure : KPI (p95, erreurs, coût) + monitoring.\n` +
+                `- Exemple concret + résultat chiffré.\n` +
+                `Astuce : annoncez ce que vous mesurez et comment vous validez avant de complexifier.`
+            );
+        }
+        if (qtype === 'closing') {
+            return (
+                `Deux questions pertinentes :\n` +
+                `1) Comment mesurez-vous le succès sur ce poste dans les 3 premiers mois ?\n` +
+                `2) Quel est le plus grand défi actuel de l’équipe et comment ce poste y contribue ?`
+            );
+        }
+        return (
+            `Réponse (structure) : Contexte → Actions (2–3) → Résultat chiffré → Lien avec ${label || title}.\n` +
+            `Exemple : [contexte], j’ai [actions], et le résultat a été [chiffre].`
+        );
+    }
+
+    function localHeuristicEvaluation(question, answer) {
+        const qText = String(question?.text || '').toLowerCase();
+        const a = String(answer || '').trim();
+        const words = a ? a.split(/\s+/).filter(Boolean) : [];
+        const wordCount = words.length;
+        const hasNumber = /\d/.test(a);
+        const hasStar = /(contexte|situation|tâche|tache|action|résultat|resultat)/i.test(a);
+
+        const expectsKeywords = [];
+        if (qText.includes('cache')) expectsKeywords.push('cache');
+        if (qText.includes('db') || qText.includes('base de données') || qText.includes('base de donnees')) expectsKeywords.push('db');
+        if (qText.includes('monitor')) expectsKeywords.push('monitoring');
+        if (qText.includes('architecture')) expectsKeywords.push('architecture');
+        if (qText.includes('trade')) expectsKeywords.push('trade-off');
+
+        const lowerA = a.toLowerCase();
+        const hasKeywords = expectsKeywords.length === 0 || expectsKeywords.some(k => lowerA.includes(k.split('-')[0]));
+
+        let score = 10;
+        score += Math.min(60, Math.floor(wordCount * 2));
+        if (hasNumber) score += 10;
+        if (hasStar) score += 10;
+        if (hasKeywords) score += 5;
+        score = Math.max(0, Math.min(100, score));
+
+        const tips = [];
+        if (wordCount < 25) tips.push("Trop court : ajoutez contexte + action + résultat (30–60s).");
+        if (!hasNumber) tips.push("Ajoutez 1 chiffre (délai, %, volume, temps de réponse, taille d'équipe).");
+        if (!hasStar) tips.push("Structurez en STAR : Contexte → Actions → Résultat → Leçon.");
+        if (!hasKeywords) tips.push("Reprenez 2 mots-clés de la question (ex: cache/DB/monitoring, trade-off, architecture).");
+        if (tips.length === 0) tips.push("Bonne base : rendez la réponse plus concrète avec un exemple et un impact mesurable.");
+
+        return { score, tips: tips.slice(0, 4) };
+    }
+
+    // Flow locks
+    let currentIndex = -1;
+    let navLock = false;
+    let startLock = false;
+    function currentQuestion() { return QUESTIONS[currentIndex] || null; }
+
+    async function nextQuestion() {
+        if (navLock) return;
+        navLock = true;
+        currentIndex += 1;
+        const q = currentQuestion();
+        els.qIndex.textContent = String(Math.min(currentIndex + 1, QUESTIONS.length));
+        els.btnRepeat.disabled = !q;
+        els.btnSendText.disabled = true;
+        els.btnNext.disabled = false;
+        els.textAnswer.value = '';
+        els.chars.textContent = '0';
+
+        if (!q) {
+            addMsg('agent', "<div class='fw-semibold'>Fin de l’entretien.</div><div class='text-muted small mt-1'>Vous pouvez recommencer avec une autre offre.</div>");
+            await speakQueued("Fin de l’entretien.");
+            els.btnNext.disabled = true;
+            els.btnSendText.disabled = true;
+            els.btnRepeat.disabled = true;
+            navLock = false;
+            return;
+        }
+
+        addMsg('agent', `<div class="fw-semibold">${escapeHtml(q.text)}</div>`, `Question ${currentIndex + 1}`);
+        await speakQueued(q.text);
+
+        if (q.type === 'intro') {
+            els.btnSendText.disabled = true;
+        } else {
+            els.btnSendText.disabled = String(els.textAnswer.value || '').trim().length === 0;
+        }
+        navLock = false;
+    }
+
+    async function sendText() {
+        const q = currentQuestion();
+        if (!q) return;
+        if (q.type === 'intro') return;
+
+        const answer = String(els.textAnswer.value || '').trim();
+        if (!answer) return;
+        addMsg('user', `<div style="white-space:pre-wrap">${escapeHtml(answer)}</div>`, 'Votre réponse');
+
+        // If the user explicitly asks for a perfect answer, return a question-specific one.
+        if (isAskingPerfectAnswer(answer)) {
+            let perfect = '';
+            try {
+                const out = await aiPerfect(currentIndex);
+                perfect = String(out.perfectAnswer || '').trim();
+            } catch {}
+            if (!perfect) perfect = localPerfectAnswer(q, OFFER);
+
+            addMsg('agent', `
+                <div class="fw-semibold">Je te propose la réponse parfaite</div>
+                <div class="small text-muted" style="white-space:pre-wrap">${escapeHtml(perfect)}</div>
+            `, 'Feedback');
+            await speakQueued("Voici une réponse parfaite adaptée à la question.");
+            await speakQueued(perfect);
+            els.textAnswer.value = '';
+            els.btnSendText.disabled = true;
+            return;
+        }
+
+        if (isGenericGreeting(answer)) {
+            addMsg('agent', "<div class='fw-semibold'>Réponse trop générale.</div><div class='text-muted small mt-2'>Répondez avec un exemple concret (STAR) et un résultat chiffré.</div>", 'Feedback');
+            await speakQueued("Réponse trop générale. Donnez un exemple concret et un résultat chiffré.");
+            els.textAnswer.value = '';
+            els.btnSendText.disabled = true;
+            return;
+        }
+
+        let evalRes = null;
+        try {
+            const out = await aiEvaluate(currentIndex, answer);
+            evalRes = out.evaluation || null;
+        } catch (e) {
+            diag("IA indisponible: " + (e?.message || String(e)));
+        }
+
+        const fallbackEval = (!evalRes || typeof evalRes.score !== 'number' || !Array.isArray(evalRes.tips) || evalRes.tips.length === 0)
+            ? localHeuristicEvaluation(q, answer)
+            : null;
+
+        const score = evalRes && typeof evalRes.score === 'number'
+            ? evalRes.score
+            : (fallbackEval ? fallbackEval.score : 0);
+
+        const tips = evalRes && Array.isArray(evalRes.tips) && evalRes.tips.length
+            ? evalRes.tips
+            : (fallbackEval ? fallbackEval.tips : ["Ajoutez un exemple concret et un résultat chiffré."]);
+
+        let perfect = '';
+        if (evalRes && typeof evalRes.perfectAnswer === 'string') perfect = evalRes.perfectAnswer.trim();
+        if (!perfect) {
+            // If evaluation didn't return a perfect answer, ask Gemini specifically for it.
+            try {
+                const out2 = await aiPerfect(currentIndex);
+                perfect = String(out2.perfectAnswer || '').trim();
+            } catch {}
+        }
+        if (!perfect) perfect = localPerfectAnswer(q, OFFER);
+
+        addMsg('agent', `
+            <div class="fw-semibold">Analyse</div>
+            <div class="small text-muted mt-1">Score estimé : <span class="fw-semibold">${score}/100</span></div>
+            <div class="fw-semibold mt-3">À corriger</div>
+            <ul class="mb-0 mt-2">${tips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>
+            <div class="fw-semibold mt-3">Je te propose la réponse parfaite</div>
+            <div class="small text-muted" style="white-space:pre-wrap">${escapeHtml(perfect)}</div>
+        `, 'Feedback');
+
+        await speakQueued("Merci. Je te propose une réponse parfaite.");
+        await speakQueued(perfect);
+
+        els.textAnswer.value = '';
+        els.btnSendText.disabled = true;
+    }
+
+    // Events
+    els.offerSelect.addEventListener('change', () => {
+        const v = els.offerSelect.value || '';
+        const url = new URL(window.location.href);
+        if (v) url.searchParams.set('offerId', v);
+        else url.searchParams.delete('offerId');
+        window.location.href = url.toString();
+    });
+
+    els.textAnswer.addEventListener('input', () => {
+        const val = String(els.textAnswer.value || '');
+        els.chars.textContent = String(val.length);
+        const q = currentQuestion();
+        if (!q || q.type === 'intro') {
+            els.btnSendText.disabled = true;
+            return;
+        }
+        els.btnSendText.disabled = currentIndex < 0 || val.trim().length === 0;
+    });
+
+    els.btnStart.addEventListener('click', async () => {
+        if (startLock) return;
+        startLock = true;
+        diag('');
+        els.chat.innerHTML = '';
+        currentIndex = -1;
+        els.qIndex.textContent = '0';
+        els.btnStart.disabled = true;
+        els.btnStop.disabled = false;
+        els.btnRepeat.disabled = true;
+        els.btnSendText.disabled = true;
+        els.btnNext.disabled = true;
+        els.textAnswer.value = '';
+        els.chars.textContent = '0';
+
+        try {
+            try {
+                const started = await aiStart(OFFER ? OFFER.id : 0);
+                if (Array.isArray(started.questions) && started.questions.length) {
+                    QUESTIONS = started.questions;
+                    els.qTotal.textContent = String(QUESTIONS.length);
+                }
+            } catch (e) {
+                diag("IA indisponible (questions locales utilisées): " + (e?.message || String(e)));
+            }
+
+            await nextQuestion();
+            els.btnNext.disabled = false;
+            setState('Prêt', 'text-bg-secondary');
+        } finally {
+            startLock = false;
+        }
+    });
+
+    els.btnStop.addEventListener('click', () => {
+        try { speechSynthesis && speechSynthesis.cancel(); } catch {}
+        setAvatar('idle');
+        setState('Arrêt', 'text-bg-secondary');
+        els.btnStart.disabled = false;
+        els.btnStop.disabled = true;
+        els.btnRepeat.disabled = true;
+        els.btnSendText.disabled = true;
+        els.btnNext.disabled = true;
+        currentIndex = -1;
+        navLock = false;
+        startLock = false;
+        speakChain = Promise.resolve();
+    });
+
+    els.btnRepeat.addEventListener('click', async () => {
+        const q = currentQuestion();
+        if (q) await speakQueued(q.text);
+    });
+    els.btnSendText.addEventListener('click', () => sendText());
+    els.btnNext.addEventListener('click', () => nextQuestion());
+    els.btnTestVoice.addEventListener('click', () => speakQueued("Test de la voix de l'agent."));
+})();
+</script>
+{% endblock %}

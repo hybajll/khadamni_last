@@ -426,15 +426,16 @@
                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_dashboard') }}">Admin Dashboard</a></li>
                             
                             {# MENU CANDIDAT #}
-                            {% else %}
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_home') }}">Accueil</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_profile') }}">Profil</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_cv_manage') }}">CV</a></li>
-                                <li class="nav-item dropdown" id="khNotifNav">
-                                    <a class="nav-link dropdown-toggle position-relative" href="#" id="notifDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa-regular fa-bell"></i>
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="khNotifBadge">0</span>
-                                    </a>
+                             {% else %}
+                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_user_home') }}">Accueil</a></li>
+                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_profile') }}">Profil</a></li>
+                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_cv_manage') }}">CV</a></li>
+                                 <li class="nav-item"><a class="nav-link" href="{{ path('app_interview_prep') }}">Préparer interview</a></li>
+                                 <li class="nav-item dropdown" id="khNotifNav">
+                                     <a class="nav-link dropdown-toggle position-relative" href="#" id="notifDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                         <i class="fa-regular fa-bell"></i>
+                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="khNotifBadge">0</span>
+                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end p-0" style="width: 360px; max-width: 90vw;">
                                         <li class="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
                                             <span class="fw-bold">Notifications</span>

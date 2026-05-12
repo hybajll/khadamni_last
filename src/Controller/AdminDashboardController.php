@@ -7,7 +7,12 @@ use App\Entity\User;
 use App\Form\AdminType;
 use App\Repository\AdminRepository;
 use App\Repository\CvRepository;
+use App\Repository\NotificationRepository;
+use App\Repository\ReclamationRepository;
+use App\Repository\ReponseReclamationRepository;
+use App\Repository\SmsLogRepository;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,7 +68,17 @@ final class AdminDashboardController extends AbstractController
 
     #[Route('/users/{id}/delete', name: 'app_admin_user_delete', methods: ['POST'])]
     #[IsGranted('ROLE_SUPERADMIN')]
-    public function deleteUser(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager): Response
+    public function deleteUser(
+        int $id,
+        Request $request,
+        UserRepository $userRepository,
+        CvRepository $cvRepository,
+        ReclamationRepository $reclamationRepository,
+        ReponseReclamationRepository $reponseReclamationRepository,
+        NotificationRepository $notificationRepository,
+        SmsLogRepository $smsLogRepository,
+        EntityManagerInterface $entityManager,
+    ): Response
     {
         $user = $userRepository->find($id);
         if (!$user instanceof User) {
@@ -81,8 +96,37 @@ final class AdminDashboardController extends AbstractController
             return $this->redirectToRoute('app_admin_users');
         }
 
-        $entityManager->remove($user);
-        $entityManager->flush();
+        // Delete/update dependent rows first for relations that don't have ON DELETE CASCADE / SET NULL in DB.
+        // CV (FK in DB is restrictive, see screenshot)
+        foreach ($cvRepository->findBy(['user' => $user]) as $cv) {
+            $entityManager->remove($cv);
+        }
+
+        // Reclamations: FK can still block deletion even if nullable => set NULL
+        foreach ($reclamationRepository->findBy(['user' => $user]) as $reclamation) {
+            $reclamation->setUser(null);
+        }
+
+        // ReponseReclamation: same for auteur_id (nullable but FK restrict) => set NULL
+        foreach ($reponseReclamationRepository->findBy(['auteur' => $user]) as $reply) {
+            $reply->setAuteur(null);
+        }
+
+        // These are mapped with onDelete: CASCADE, but removing explicitly is safe.
+        foreach ($notificationRepository->findBy(['user' => $user]) as $notification) {
+            $entityManager->remove($notification);
+        }
+        foreach ($smsLogRepository->findBy(['user' => $user]) as $smsLog) {
+            $entityManager->remove($smsLog);
+        }
+
+        try {
+            $entityManager->remove($user);
+            $entityManager->flush();
+        } catch (ForeignKeyConstraintViolationException) {
+            $this->addFlash('error', "Suppression impossible : l'utilisateur a encore des donnÃ©es liÃ©es (ex: CV / rÃ©clamations / messages).");
+            return $this->redirectToRoute('app_admin_users');
+        }
 
         $this->addFlash('success', 'Utilisateur supprimé.');
         return $this->redirectToRoute('app_admin_users');

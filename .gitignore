@@ -8,8 +8,6 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
-<<<<<<< HEAD
-=======
 
 ###> phpunit/phpunit ###
 /phpunit.xml
@@ -20,12 +18,14 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
-<<<<<<< HEAD
-=======
 
 # Local scratch files
 /tmp_*.php
 /tmp_*.txt
 /templates/base.legacy.html.twig
->>>>>>> origin/main
->>>>>>> 99de4081c485d35108cfc6223ee27fd1f566d5e9
+
+# Uploaded files / local media
+/public/uploads/
+
+# Local tools (ffmpeg/whisper etc.)
+/tools/

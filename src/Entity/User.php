@@ -257,11 +257,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = ['ROLE_USER'];
 
-        if ($this instanceof Admin) {
+        $adminRole = $this->getAdminRole();
+
+        // Any user with an admin business role (or the Admin subclass) must be treated as an admin
+        // so they can access the /admin area.
+        if ($this instanceof Admin || ($adminRole !== null && trim($adminRole) !== '')) {
             $roles[] = 'ROLE_ADMIN';
         }
-
-        $adminRole = $this->getAdminRole();
 
         if ($adminRole) {
             $normalized = strtoupper(trim($adminRole));

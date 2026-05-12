@@ -20,11 +20,10 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     {
         $user = $token->getUser();
 
-        if ($user instanceof User && $user->getType() === User::TYPE_ADMIN) {
+        if ($user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_admin_dashboard'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_user_home'));
     }
 }
-
