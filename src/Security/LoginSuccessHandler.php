@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use App\Entity\Society;
+use App\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
@@ -22,27 +23,18 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     {
         $user = $token->getUser();
 
-<<<<<<< HEAD
-        // Si l'utilisateur est une entreprise
+        // 1. Priorité aux Sociétés (Votre code)
         if ($user instanceof Society) {
             return new RedirectResponse($this->router->generate('society_dashboard'));
         }
 
-        // Si l'utilisateur est un Admin (via la hiérarchie)
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+        // 2. Priorité aux Admins (Code de vos collègues, sécurisé avec check instance)
+        if ($user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return new RedirectResponse($this->router->generate('app_admin_dashboard'));
         }
 
-        // Par défaut pour les étudiants
-        return new RedirectResponse($this->router->generate('app_reclamation_index'));
+        // 3. Par défaut pour les autres types d'utilisateurs (Candidats/Étudiants)
+        // Vous pouvez choisir 'app_reclamation_index' ou 'app_user_home' selon votre besoin final.
+        return new RedirectResponse($this->router->generate('app_user_home'));
     }
 }
-=======
-        if ($user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_admin_dashboard'));
-        }
-
-        return new RedirectResponse($this->urlGenerator->generate('app_user_home'));
-    }
-}
->>>>>>> f18e9c9819cf7a44cbe32fa242979d05cfa7ab37
