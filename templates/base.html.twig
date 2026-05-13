@@ -407,7 +407,7 @@
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_offer_new') }}">Publier</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_profile') }}">Profil</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ path('society_subscription') }}">Abonnement</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_society_reclamation_index') }}">Reclamation</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_reclamation_index') }}">Reclamation</a></li>
                                 <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
                                     {% set remaining = 1 - (app.user.freeUsageCount ?? 0) %}
                                     <a class="text-decoration-none" href="{{ path('society_subscription') }}">
@@ -447,7 +447,7 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_user_reclamation_index') }}">Réclamations</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ path('app_reclamation_index') }}">Réclamations</a></li>
                                 <li class="nav-item d-none d-lg-flex align-items-center ms-lg-2">
                                     {% set remaining = 2 - (app.user.freeUsageCount ?? 0) %}
                                     <a class="text-decoration-none" href="{{ path('app_subscription') }}">
@@ -461,7 +461,7 @@
                                     </a>
                                 </li>
                             {% endif %}
-                            <li class="nav-item"><a class="nav-link" href="{{ path(isSociety ? 'society_logout' : 'app_logout') }}">Déconnexion</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a></li>
                             <li class="nav-item ms-lg-2 d-flex align-items-center">
                                 <a class="nav-link py-1" href="{{ path(isSociety ? 'society_profile' : 'app_profile') }}" title="Mon profil">
                                     {% set avatarPath = attribute(app.user, 'avatarPath') is defined ? attribute(app.user, 'avatarPath') : null %}

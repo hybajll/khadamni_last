@@ -117,17 +117,17 @@ class AiAssistantService
         return $matchCount >= 1;
     }
 
-    private function getFallbackResponse(string $type): string
-    {
+    private function getFallbackResponse(string $type): string {
+    
         $responses = [
-            'CONNEXION' => "🔐 **Problème de connexion**\n\n1. Vérifiez votre email/mot de passe\n2. Utilisez 'Mot de passe oublié'\n3. Vérifiez vos spams\n4. Contactez-nous si le problème persiste\n\nContact : support@khadamni.tn",
-            'OFFRE_EMPLOI' => "💼 **Offre d'emploi inaccessible**\n\nSolutions :\n• Rafraîchissez la page (Ctrl+F5)\n• Vérifiez votre connexion internet\n• Utilisez un autre navigateur\n• Contactez l'entreprise émettrice\n\nNotre équipe investigate l'incident.\n\nContact : support@khadamni.tn",
-            'CV' => "📄 **Problème de CV**\n\n1. Vérifiez le format (PDF recommandé)\n2. Taille maximale : 5 Mo\n3. Utilisez notre outil de mise en ligne\n4. Support technique : cv@khadamni.tn\n\nContact : support@khadamni.tn",
-            'COMPTE' => "👤 **Problème de compte**\n\n• Vérifiez votre email de confirmation\n• Complétez votre profil\n• Mettez à jour vos documents\n• Contactez notre service client\n\nContact : support@khadamni.tn",
-            'STAGE' => "🎓 **Recherche de stage**\n\n• Consultez notre section dédiée aux stages\n• Mettez à jour votre profil\n• Postulez aux offres correspondantes\n• Activez les alertes emploi\n\nContact : support@khadamni.tn"
+            'CONNEXION' => " **Problème de connexion**\n\n1. Vérifiez votre email/mot de passe\n2. Utilisez 'Mot de passe oublié'\n3. Vérifiez vos spams\n4. Contactez-nous si le problème persiste\n\nContact : support@khadamni.tn",
+            'OFFRE_EMPLOI' => " **Offre d'emploi inaccessible**\n\nSolutions :\n• Rafraîchissez la page (Ctrl+F5)\n• Vérifiez votre connexion internet\n• Utilisez un autre navigateur\n• Contactez l'entreprise émettrice\n\nNotre équipe investigate l'incident.\n\nContact : support@khadamni.tn",
+            'CV' => " **Problème de CV**\n\n1. Vérifiez le format (PDF recommandé)\n2. Taille maximale : 5 Mo\n3. Utilisez notre outil de mise en ligne\n4. Support technique : cv@khadamni.tn\n\nContact : support@khadamni.tn",
+            'COMPTE' => " **Problème de compte**\n\n• Vérifiez votre email de confirmation\n• Complétez votre profil\n• Mettez à jour vos documents\n• Contactez notre service client\n\nContact : support@khadamni.tn",
+            'STAGE' => " **Recherche de stage**\n\n• Consultez notre section dédiée aux stages\n• Mettez à jour votre profil\n• Postulez aux offres correspondantes\n• Activez les alertes emploi\n\nContact : support@khadamni.tn"
         ];
         
-        return $responses[$type] ?? "Bonjour, nous avons bien reçu votre réclamation concernant : $type. Notre équipe support analyse votre demande et reviendra vers vous rapidement.\n\nContact : support@khadamni.tn";
+        return $responses[$type] ?? "Bonjour, nous avons bien reçu votre réclamation concernant : $type. Notre équipe support analyse votre demande et reviendra vers vous rapidement.";
     }
 
     public function processNewReclamation(Reclamation $reclamation): bool

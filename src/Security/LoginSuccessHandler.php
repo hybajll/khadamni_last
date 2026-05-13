@@ -2,29 +2,37 @@
 
 namespace App\Security;
 
-use App\Entity\User;
+use App\Entity\Society;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
 
 class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 {
-    public function __construct(
-        private readonly UrlGeneratorInterface $urlGenerator,
-    ) {
+    private RouterInterface $router;
+
+    public function __construct(RouterInterface $router)
+    {
+        $this->router = $router;
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): RedirectResponse
     {
         $user = $token->getUser();
 
-        if ($user instanceof User && $user->getType() === User::TYPE_ADMIN) {
-            return new RedirectResponse($this->urlGenerator->generate('app_admin_dashboard'));
+        // Si l'utilisateur est une entreprise
+        if ($user instanceof Society) {
+            return new RedirectResponse($this->router->generate('society_dashboard'));
         }
 
-        return new RedirectResponse($this->urlGenerator->generate('app_user_home'));
+        // Si l'utilisateur est un Admin (via la hiérarchie)
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new RedirectResponse($this->router->generate('app_admin_dashboard'));
+        }
+
+        // Par défaut pour les étudiants
+        return new RedirectResponse($this->router->generate('app_reclamation_index'));
     }
 }
-
