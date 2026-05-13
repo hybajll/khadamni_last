@@ -91,9 +91,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reclamation::class)]
     private Collection $reclamations;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: News::class)]
+    private Collection $news;
+
     public function __construct()
     {
         $this->reclamations = new ArrayCollection();
+        $this->news = new ArrayCollection();
     }
 
     // ================= GETTERS / SETTERS =================
@@ -253,11 +257,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = ['ROLE_USER'];
 
-        if ($this instanceof Admin) {
+        $adminRole = $this->getAdminRole();
+
+        // Any user with an admin business role (or the Admin subclass) must be treated as an admin
+        // so they can access the /admin area.
+        if ($this instanceof Admin || ($adminRole !== null && trim($adminRole) !== '')) {
             $roles[] = 'ROLE_ADMIN';
         }
-
-        $adminRole = $this->getAdminRole();
 
         if ($adminRole) {
             $normalized = strtoupper(trim($adminRole));
@@ -310,6 +316,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->reclamations->removeElement($reclamation)) {
             if ($reclamation->getUser() === $this) {
                 $reclamation->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, News>
+     */
+    public function getNews(): Collection
+    {
+        return $this->news;
+    }
+
+    public function addNews(News $news): self
+    {
+        if (!$this->news->contains($news)) {
+            $this->news->add($news);
+            $news->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNews(News $news): self
+    {
+        if ($this->news->removeElement($news)) {
+            if ($news->getUser() === $this) {
+                $news->setUser(null);
             }
         }
 

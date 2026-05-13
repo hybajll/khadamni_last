@@ -22,6 +22,7 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     {
         $user = $token->getUser();
 
+<<<<<<< HEAD
         // Si l'utilisateur est une entreprise
         if ($user instanceof Society) {
             return new RedirectResponse($this->router->generate('society_dashboard'));
@@ -36,3 +37,12 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         return new RedirectResponse($this->router->generate('app_reclamation_index'));
     }
 }
+=======
+        if ($user instanceof User && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_admin_dashboard'));
+        }
+
+        return new RedirectResponse($this->urlGenerator->generate('app_user_home'));
+    }
+}
+>>>>>>> f18e9c9819cf7a44cbe32fa242979d05cfa7ab37

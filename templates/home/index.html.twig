@@ -173,12 +173,6 @@
         }
         .how-steps li{ margin: 6px 0; }
 
-        .video-shell{
-            border-radius: 18px;
-            overflow:hidden;
-            border: 1px solid rgba(0,0,0,0.06);
-            background: #000;
-        }
 
         .offers-wrap .offer-row{
             padding: 16px 0;
@@ -204,7 +198,7 @@
     <header class="landing-hero">
         <div class="container hero-inner">
             <div class="row align-items-center g-4">
-                <div class="col-lg-7">
+                <div class="col-lg-12">
                     <div class="hero-brand hero-fade-up">
                         <div class="name">خدمني</div>
                         <div class="tagline">خدمتك معانا مضمونة</div>
@@ -239,27 +233,6 @@
                         <div class="stat">
                             <div class="k">{{ stats.offers|default(0) }}</div>
                             <div class="l">عروض نشطة</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-5">
-                    <div class="landing-surface padded reveal">
-                        <div class="d-flex align-items-start justify-content-between gap-3">
-                            <div>
-                                <div class="fw-bold mb-1">Mini vidéo : مفهوم التطبيق</div>
-                                <div class="text-muted small">فيديو قصير يشرح الفكرة في أقل من دقيقة.</div>
-                            </div>
-                            <span class="badge rounded-pill">Guide</span>
-                        </div>
-                        <div class="video-shell mt-3">
-                            <video controls preload="metadata" style="width:100%; height:auto; display:block;">
-                                <source src="{{ asset('videos/landing-intro.mp4') }}" type="video/mp4">
-                            </video>
-                        </div>
-                        <div class="text-muted small mt-2">
-                            إذا لم يظهر الفيديو، تأكد أن الملف موجود بهذا الاسم:
-                            <code>public/videos/landing-intro.mp4</code>.
                         </div>
                     </div>
                 </div>
