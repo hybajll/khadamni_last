@@ -1,90 +1,54 @@
 security:
+
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-        App\Entity\Society: 'auto'
-        App\Entity\User: 'auto'
-
-    role_hierarchy:
-        ROLE_SUPERADMIN: [ROLE_MODERATOR, ROLE_MANAGER, ROLE_ADMIN]
 
     providers:
+
         app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
+
         app_society_provider:
             entity:
                 class: App\Entity\Society
                 property: email
-        # Le chain_provider permet de chercher l'email dans les deux tables pour le login principal
+
         chain_provider:
             chain:
-                providers: [app_user_provider, app_society_provider]
+                providers:
+                    - app_user_provider
+                    - app_society_provider
 
     firewalls:
+
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        # 1. Firewall pour l'espace Société
-        society:
-            pattern: ^/society
-            lazy: true
-            provider: app_society_provider
-            user_checker: App\Security\UserChecker
-            form_login:
-                login_path: society_login
-                check_path: society_login
-                enable_csrf: true
-                # On garde le success_handler s'il existe, sinon default_target_path
-                success_handler: App\Security\SocietyLoginSuccessHandler
-                default_target_path: society_dashboard
-            logout:
-                path: society_logout
-                target: app_home
-
-        # 2. Firewall principal (Candidats, Admin et accès globaux)
         main:
             lazy: true
             provider: chain_provider
-            user_checker: App\Security\UserChecker
+
             form_login:
                 login_path: app_login
                 check_path: app_login
-                enable_csrf: true
-                success_handler: App\Security\LoginSuccessHandler
+
             logout:
                 path: app_logout
                 target: app_home
+
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800
                 path: /
-                always_remember_me: true
 
     access_control:
-        # Accès publics
-        - { path: ^/society/login, roles: PUBLIC_ACCESS }
-        - { path: ^/society/register, roles: PUBLIC_ACCESS }
+
         - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
 
-        # Accès restreints par rôles
-        - { path: ^/society, roles: ROLE_SOCIETY }
         - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/society, roles: ROLE_SOCIETY }
         - { path: ^/user, roles: ROLE_USER }
-        - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/cv, roles: ROLE_USER }
-        
-        # Réclamations (Accessible aux deux)
-        - { path: ^/reclamations, roles: [ROLE_USER, ROLE_SOCIETY] }
-        - { path: ^/reclamation, roles: [ROLE_USER, ROLE_SOCIETY] }
-
-when@test:
-    security:
-        password_hashers:
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4
-                time_cost: 3
-                memory_cost: 10
